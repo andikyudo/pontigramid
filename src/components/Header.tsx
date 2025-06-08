@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Menu, X, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SearchBox from '@/components/SearchBox';
@@ -25,22 +26,37 @@ interface HeaderProps {
 
 export default function Header({ onSearch, onCategoryChange, currentCategory = 'all' }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
 
   const handleSearch = (query: string) => {
     if (onSearch) {
       onSearch(query);
+    } else {
+      // If no onSearch handler provided, navigate to home with search query
+      const params = new URLSearchParams();
+      if (query.trim()) {
+        params.set('search', query.trim());
+      }
+      router.push(`/?${params.toString()}`);
     }
   };
 
   const handleCategoryClick = (categoryId: string) => {
     if (onCategoryChange) {
       onCategoryChange(categoryId);
+    } else {
+      // If no onCategoryChange handler provided, navigate to home with category filter
+      const params = new URLSearchParams();
+      if (categoryId !== 'all') {
+        params.set('category', categoryId);
+      }
+      router.push(`/?${params.toString()}`);
     }
     setIsMenuOpen(false);
   };
 
   return (
-    <header className="bg-white shadow-sm border-b sticky top-0 z-50">
+    <header className="bg-white shadow-sm border-b sticky top-0 z-[100]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Header */}
         <div className="flex items-center justify-between h-16">
@@ -55,14 +71,7 @@ export default function Header({ onSearch, onCategoryChange, currentCategory = '
             <SearchBox onSearch={handleSearch} className="w-full" />
           </div>
 
-          {/* Desktop Admin Link */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Link href="/admin">
-              <Button variant="outline" size="sm">
-                Admin
-              </Button>
-            </Link>
-          </div>
+
 
           {/* Mobile Menu Button */}
           <button
@@ -115,14 +124,7 @@ export default function Header({ onSearch, onCategoryChange, currentCategory = '
               ))}
             </div>
 
-            {/* Mobile Admin Link */}
-            <div className="pt-3 border-t">
-              <Link href="/admin" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="outline" className="w-full">
-                  Admin Dashboard
-                </Button>
-              </Link>
-            </div>
+
           </div>
         </div>
       )}

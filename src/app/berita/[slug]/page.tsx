@@ -9,9 +9,9 @@ import Footer from '@/components/Footer';
 import SocialShareButtons from '@/components/SocialShareButtons';
 
 interface NewsDetailProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 interface NewsItem {
@@ -57,19 +57,20 @@ const categoryColors: { [key: string]: string } = {
 };
 
 export default async function NewsDetail({ params }: NewsDetailProps) {
-  const news = await getNews(params.slug);
+  const { slug } = await params;
+  const news = await getNews(slug);
 
   if (!news) {
     notFound();
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  const currentUrl = `${baseUrl}/berita/${params.slug}`;
+  const currentUrl = `${baseUrl}/berita/${slug}`;
   const readingTime = Math.ceil(news.content.split(' ').length / 200);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <Header currentCategory={news.category} />
 
       {/* Social Share Buttons */}
       <SocialShareButtons
@@ -183,7 +184,8 @@ export default async function NewsDetail({ params }: NewsDetailProps) {
 }
 
 export async function generateMetadata({ params }: NewsDetailProps) {
-  const news = await getNews(params.slug);
+  const { slug } = await params;
+  const news = await getNews(slug);
 
   if (!news) {
     return {
@@ -193,7 +195,7 @@ export async function generateMetadata({ params }: NewsDetailProps) {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  const currentUrl = `${baseUrl}/berita/${params.slug}`;
+  const currentUrl = `${baseUrl}/berita/${slug}`;
 
   return {
     title: `${news.title} - PontigramID`,

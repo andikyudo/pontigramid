@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import NewsCard from '@/components/NewsCard';
 import BreakingNewsSlider from '@/components/BreakingNewsSlider';
@@ -35,6 +36,9 @@ interface NewsResponse {
 }
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -42,6 +46,20 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState(1);
   const [currentCategory, setCurrentCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Initialize state from URL parameters
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    const searchParam = searchParams.get('search');
+
+    if (categoryParam && categoryParam !== currentCategory) {
+      setCurrentCategory(categoryParam);
+    }
+
+    if (searchParam && searchParam !== searchQuery) {
+      setSearchQuery(searchParam);
+    }
+  }, [searchParams]);
 
   const fetchNews = async (page: number = 1, category: string = 'all', search: string = '', append: boolean = false) => {
     try {
@@ -97,11 +115,29 @@ export default function Home() {
   const handleCategoryChange = (category: string) => {
     setCurrentCategory(category);
     setCurrentPage(1);
+
+    // Update URL parameters
+    const params = new URLSearchParams(searchParams.toString());
+    if (category === 'all') {
+      params.delete('category');
+    } else {
+      params.set('category', category);
+    }
+    router.push(`/?${params.toString()}`);
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     setCurrentPage(1);
+
+    // Update URL parameters
+    const params = new URLSearchParams(searchParams.toString());
+    if (query.trim()) {
+      params.set('search', query.trim());
+    } else {
+      params.delete('search');
+    }
+    router.push(`/?${params.toString()}`);
   };
 
   const loadMore = () => {

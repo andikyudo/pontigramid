@@ -5,12 +5,12 @@ import News from '@/models/News';
 // GET - Ambil berita berdasarkan slug
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     await connectDB();
-    
-    const { slug } = params;
+
+    const { slug } = await params;
     
     const news = await News.findOne({ 
       slug: slug,

@@ -54,6 +54,7 @@ export default function NewsForm({ initialData, isEdit = false, newsId }: NewsFo
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
+  const [imageFit, setImageFit] = useState<'cover' | 'contain'>('contain');
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -193,14 +194,24 @@ export default function NewsForm({ initialData, isEdit = false, newsId }: NewsFo
         <Card className="max-w-4xl mx-auto">
           <CardContent className="p-8">
             {formData.imageUrl && (
-              <div className="relative w-full h-64 mb-6">
+              <div className="relative w-full h-64 mb-6 bg-gray-100 rounded-lg overflow-hidden">
                 <Image
                   src={formData.imageUrl}
                   alt={formData.title || 'Preview image'}
                   fill
-                  className="object-cover rounded-lg"
+                  className={`rounded-lg transition-all duration-300 ${imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
                 />
+                {/* Image Fit Toggle */}
+                <div className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-lg p-1">
+                  <button
+                    onClick={() => setImageFit(imageFit === 'contain' ? 'cover' : 'contain')}
+                    className="text-white text-xs px-2 py-1 rounded hover:bg-white hover:bg-opacity-20 transition-colors"
+                    title={imageFit === 'contain' ? 'Switch to crop mode' : 'Switch to fit mode'}
+                  >
+                    {imageFit === 'contain' ? '🔲 Fit' : '✂️ Crop'}
+                  </button>
+                </div>
               </div>
             )}
             
@@ -377,20 +388,56 @@ export default function NewsForm({ initialData, isEdit = false, newsId }: NewsFo
             </CardHeader>
             <CardContent>
               {formData.imageUrl ? (
-                <div className="relative w-full h-40">
-                  <Image
-                    src={formData.imageUrl}
-                    alt="Preview"
-                    fill
-                    className="object-cover rounded-lg"
-                    sizes="(max-width: 768px) 100vw, 400px"
-                  />
-                  <button
-                    onClick={() => setFormData({ ...formData, imageUrl: '' })}
-                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                <div className="space-y-3">
+                  <div className="relative w-full h-40 bg-gray-100 rounded-lg overflow-hidden">
+                    <Image
+                      src={formData.imageUrl}
+                      alt="Preview"
+                      fill
+                      className={`rounded-lg transition-all duration-300 ${imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
+                      sizes="(max-width: 768px) 100vw, 400px"
+                    />
+                    <button
+                      onClick={() => setFormData({ ...formData, imageUrl: '' })}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Image Fit Controls */}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Display Mode:</span>
+                    <div className="flex bg-gray-100 rounded-lg p-1">
+                      <button
+                        onClick={() => setImageFit('contain')}
+                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                          imageFit === 'contain'
+                            ? 'bg-blue-500 text-white'
+                            : 'text-gray-600 hover:text-gray-800'
+                        }`}
+                      >
+                        🔲 Fit All
+                      </button>
+                      <button
+                        onClick={() => setImageFit('cover')}
+                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                          imageFit === 'cover'
+                            ? 'bg-blue-500 text-white'
+                            : 'text-gray-600 hover:text-gray-800'
+                        }`}
+                      >
+                        ✂️ Fill Frame
+                      </button>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-gray-500">
+                    {imageFit === 'contain'
+                      ? 'Gambar akan ditampilkan utuh tanpa terpotong'
+                      : 'Gambar akan mengisi frame penuh (mungkin terpotong)'
+                    }
+                  </p>
                 </div>
               ) : (
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">

@@ -1,45 +1,76 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { getSession } from '@/lib/auth';
 
-export function middleware(request: NextRequest) {
-  // TEMPORARILY DISABLE ADMIN DASHBOARD PROTECTION
-  // Allow all access to admin dashboard for testing
-  if (request.nextUrl.pathname.startsWith('/admin/dashboard') ||
-      request.nextUrl.pathname.startsWith('/admin/news')) {
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
-    console.log('Middleware: Allowing access to', request.nextUrl.pathname);
+  // Public routes that don't require authentication
+  const publicRoutes = [
+    '/admin/login',
+    '/api/auth/login',
+    '/api/auth/csrf',
+    '/api/auth/logout'
+  ];
+
+  // Check if the route is public
+  if (publicRoutes.includes(pathname)) {
     return NextResponse.next();
   }
 
-  // TEMPORARILY DISABLE API ADMIN AUTHENTICATION FOR TESTING
-  // For API routes that require authentication
-  if (request.nextUrl.pathname.startsWith('/api/admin')) {
-    console.log('Middleware: Allowing access to API admin route:', request.nextUrl.pathname);
-    return NextResponse.next();
-
-    // Original authentication code (disabled for testing)
-    /*
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, error: 'Token tidak ditemukan' },
-        { status: 401 }
-      );
-    }
-
+  // Admin routes that require authentication
+  if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin/')) {
     try {
-      jwt.verify(token, process.env.NEXTAUTH_SECRET || 'fallback-secret');
+      const session = await getSession();
+
+      if (!session) {
+        // Redirect to login for admin pages
+        if (pathname.startsWith('/admin')) {
+          const loginUrl = new URL('/admin/login', request.url);
+          loginUrl.searchParams.set('redirect', pathname);
+          return NextResponse.redirect(loginUrl);
+        }
+
+        // Return 401 for API routes
+        if (pathname.startsWith('/api/admin/')) {
+          return NextResponse.json(
+            { success: false, error: 'Authentication required' },
+            { status: 401 }
+          );
+        }
+      }
+
+      // Check if user has admin privileges
+      if (session && !['admin', 'super_admin'].includes(session.role)) {
+        if (pathname.startsWith('/admin')) {
+          return NextResponse.redirect(new URL('/admin/login', request.url));
+        }
+
+        if (pathname.startsWith('/api/admin/')) {
+          return NextResponse.json(
+            { success: false, error: 'Admin privileges required' },
+            { status: 403 }
+          );
+        }
+      }
+
+      console.log('Middleware: Authenticated access to', pathname, 'by', session?.username);
       return NextResponse.next();
+
     } catch (error) {
-      console.error('JWT verification error:', error);
-      return NextResponse.json(
-        { success: false, error: 'Token tidak valid' },
-        { status: 401 }
-      );
+      console.error('Middleware authentication error:', error);
+
+      if (pathname.startsWith('/admin')) {
+        return NextResponse.redirect(new URL('/admin/login', request.url));
+      }
+
+      if (pathname.startsWith('/api/admin/')) {
+        return NextResponse.json(
+          { success: false, error: 'Authentication error' },
+          { status: 500 }
+        );
+      }
     }
-    */
   }
 
   return NextResponse.next();
@@ -47,8 +78,8 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/admin/dashboard/:path*',
-    '/admin/news/:path*',
-    '/api/admin/:path*'
+    '/admin/:path*',
+    '/api/admin/:path*',
+    '/api/auth/:path*'
   ]
 };

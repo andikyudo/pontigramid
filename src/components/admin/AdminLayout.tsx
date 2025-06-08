@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import VisitorAnalytics from './VisitorAnalytics';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -76,6 +77,12 @@ const navigation = [
     description: 'Log aktivitas'
   },
   {
+    name: 'Footer',
+    href: '/admin/footer',
+    icon: Settings,
+    description: 'Kelola footer website'
+  },
+  {
     name: 'Settings',
     href: '/admin/settings',
     icon: Settings,
@@ -85,7 +92,79 @@ const navigation = [
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [user, setUser] = useState<{ username: string; email: string; role: string } | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutMessage, setLogoutMessage] = useState('');
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Get user info from session storage or API
+    const storedUser = sessionStorage.getItem('admin-user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    setLogoutMessage('Logging out...');
+
+    // Always clear local session data first (fallback behavior)
+    const clearLocalSession = () => {
+      try {
+        sessionStorage.removeItem('admin-user');
+        setUser(null);
+      } catch (error) {
+        console.error('Error clearing session storage:', error);
+      }
+    };
+
+    try {
+      // Attempt to call logout API
+      setLogoutMessage('Clearing server session...');
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies
+      });
+
+      if (response.ok) {
+        console.log('Server logout successful');
+        setLogoutMessage('Logout successful!');
+      } else {
+        console.warn('Server logout failed, but continuing with local logout');
+        setLogoutMessage('Completing logout...');
+      }
+    } catch (error) {
+      console.warn('Logout API call failed, but continuing with local logout:', error);
+      setLogoutMessage('Completing logout...');
+      // Don't throw error - we'll still proceed with local logout
+    }
+
+    // Always clear local session and redirect (regardless of API success/failure)
+    clearLocalSession();
+
+    try {
+      // Small delay to show success message
+      setTimeout(() => {
+        setLogoutMessage('Redirecting...');
+        router.push('/admin/login');
+      }, 500);
+    } catch (error) {
+      console.error('Redirect error:', error);
+      // Fallback: reload page to login
+      window.location.href = '/admin/login';
+    }
+
+    // Reset after delay
+    setTimeout(() => {
+      setLoggingOut(false);
+      setLogoutMessage('');
+    }, 1000);
+  };
 
   const isActive = (href: string) => {
     if (href === '/admin/dashboard') {
@@ -154,24 +233,37 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             })}
           </nav>
 
+          {/* Visitor Analytics */}
+          <div className="px-4 pb-4">
+            <VisitorAnalytics />
+          </div>
+
           {/* User info */}
           <div className="border-t border-gray-200 p-4">
             <div className="flex items-center space-x-3 mb-3">
               <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">A</span>
+                <span className="text-white text-sm font-medium">
+                  {user?.username?.charAt(0).toUpperCase() || 'A'}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">Admin User</p>
-                <p className="text-xs text-gray-500 truncate">admin@pontigramid.com</p>
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {user?.username || 'Admin User'}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {user?.email || 'admin@pontigramid.com'}
+                </p>
               </div>
             </div>
             <Button
               variant="ghost"
               size="sm"
               className="w-full justify-start text-gray-600 hover:text-gray-900"
+              onClick={handleLogout}
+              disabled={loggingOut}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              Logout
+              {loggingOut ? (logoutMessage || 'Logging out...') : 'Logout'}
             </Button>
           </div>
         </div>
