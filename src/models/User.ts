@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
   username: string;
@@ -73,12 +74,11 @@ UserSchema.index({ role: 1, isActive: 1 });
 
 // Virtual for checking if account is locked
 UserSchema.virtual('isLocked').get(function() {
-  return !!(this.lockoutUntil && this.lockoutUntil > Date.now());
+  return !!(this.lockoutUntil && this.lockoutUntil.getTime() > Date.now());
 });
 
 // Static method to create default admin
 UserSchema.statics.createDefaultAdmin = async function() {
-  const bcrypt = require('bcryptjs');
 
   const existingAdmin = await this.findOne({ role: { $in: ['admin', 'super_admin'] } });
   if (existingAdmin) {

@@ -7,7 +7,7 @@ export async function GET() {
   try {
     await connectDB();
     
-    const footer = await Footer.getOrCreateDefault();
+    const footer = await (Footer as any).getOrCreateDefault();
     
     return NextResponse.json({
       success: true,
@@ -39,19 +39,23 @@ export async function PUT(request: NextRequest) {
 
     // Get existing footer or create default
     let footer = await Footer.findOne();
-    
+
     if (!footer) {
-      footer = await Footer.getOrCreateDefault();
+      footer = await (Footer as any).getOrCreateDefault();
     }
 
     // Update footer data
-    footer.footerLinks = body.footerLinks;
-    footer.socialLinks = body.socialLinks;
-    footer.contactInfo = body.contactInfo;
-    footer.companyInfo = body.companyInfo;
-    footer.newsletter = body.newsletter || footer.newsletter;
+    if (footer) {
+      footer.footerLinks = body.footerLinks;
+      footer.socialLinks = body.socialLinks;
+      footer.contactInfo = body.contactInfo;
+      footer.companyInfo = body.companyInfo;
+      footer.newsletter = body.newsletter || footer.newsletter;
+    }
 
-    await footer.save();
+    if (footer) {
+      await footer.save();
+    }
 
     return NextResponse.json({
       success: true,
@@ -76,7 +80,7 @@ export async function POST() {
     await Footer.deleteMany({});
     
     // Create new default footer
-    const footer = await Footer.getOrCreateDefault();
+    const footer = await (Footer as any).getOrCreateDefault();
     
     return NextResponse.json({
       success: true,

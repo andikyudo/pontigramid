@@ -205,7 +205,7 @@ export default function KebijakanPrivasi() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Perubahan Kebijakan</h2>
           <p>
             Kami dapat memperbarui kebijakan privasi ini dari waktu ke waktu. Perubahan akan 
-            dinotifikasikan melalui situs web kami dan tanggal "terakhir diperbarui" akan 
+            dinotifikasikan melalui situs web kami dan tanggal &ldquo;terakhir diperbarui&rdquo; akan
             direvisi. Kami mendorong Anda untuk meninjau kebijakan ini secara berkala.
           </p>
         </div>

@@ -107,9 +107,9 @@ export default function VisiMisi() {
           <h2 className="text-3xl font-bold text-gray-900 mb-6">Visi Kami</h2>
           <div className="bg-blue-50 p-8 rounded-lg border border-blue-200 max-w-4xl mx-auto">
             <p className="text-2xl font-semibold text-gray-800 leading-relaxed">
-              "Menjadi portal berita digital terpercaya dan terdepan di Indonesia yang memberikan 
-              kontribusi positif bagi kemajuan bangsa melalui penyebaran informasi yang akurat, 
-              edukatif, dan inspiratif."
+              "              &ldquo;Menjadi portal berita digital terpercaya dan terdepan di Indonesia yang memberikan
+              kontribusi positif bagi kemajuan bangsa melalui penyebaran informasi yang akurat,
+              edukatif, dan inspiratif.&rdquo;"
             </p>
           </div>
         </div>

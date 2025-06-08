@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
     
     // Build query
-    let query: any = {};
+    const query: Record<string, unknown> = {};
     
     if (filter === 'blocked') {
       query.isBlocked = true;
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Build sort object
-    const sort: any = {};
+    const sort: Record<string, 1 | -1> = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
     
     // Get visitors with pagination

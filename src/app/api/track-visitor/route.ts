@@ -12,13 +12,13 @@ export async function POST(request: NextRequest) {
     // Get client IP address
     const forwarded = request.headers.get('x-forwarded-for');
     const realIP = request.headers.get('x-real-ip');
-    const clientIP = forwarded?.split(',')[0] || realIP || request.ip || 'unknown';
+    const clientIP = forwarded?.split(',')[0] || realIP || 'unknown';
     
     // Get user agent
     const userAgent = request.headers.get('user-agent') || 'unknown';
     
     // Track the visitor
-    const visitor = await Visitor.trackVisitor(
+    const visitor = await (Visitor as any).trackVisitor(
       clientIP,
       userAgent,
       pageUrl,
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     // Get client IP for current visitor info
     const forwarded = request.headers.get('x-forwarded-for');
     const realIP = request.headers.get('x-real-ip');
-    const clientIP = forwarded?.split(',')[0] || realIP || request.ip || 'unknown';
+    const clientIP = forwarded?.split(',')[0] || realIP || 'unknown';
     
     const visitor = await Visitor.findOne({ ipAddress: clientIP });
     

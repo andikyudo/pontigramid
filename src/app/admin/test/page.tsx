@@ -37,7 +37,7 @@ export default function AdminTestPage() {
       const data = await response.json();
       setApiTest(data);
     } catch (error) {
-      setApiTest({ error: error.message });
+      setApiTest({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   };
 

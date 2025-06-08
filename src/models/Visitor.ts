@@ -161,7 +161,7 @@ VisitorSchema.statics.trackVisitor = async function(ipAddress: string, userAgent
           await visitor.save();
         }
       } catch (error) {
-        console.log('Location info not available:', error.message);
+        console.log('Location info not available:', error instanceof Error ? error.message : 'Unknown error');
       }
     }
     
@@ -187,9 +187,14 @@ async function getLocationInfo(ipAddress: string) {
   
   try {
     // Using free ipapi.co service (no API key required for basic info)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     const response = await fetch(`https://ipapi.co/${ipAddress}/json/`, {
-      timeout: 5000
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
     
     if (response.ok) {
       const data = await response.json();
@@ -202,7 +207,7 @@ async function getLocationInfo(ipAddress: string) {
       };
     }
   } catch (error) {
-    console.log('Failed to get location info:', error.message);
+    console.log('Failed to get location info:', error instanceof Error ? error.message : 'Unknown error');
   }
   
   return null;

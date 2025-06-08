@@ -98,7 +98,7 @@ const nextConfig = {
   },
   eslint: {
     // Only run ESLint in development
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
 };
 

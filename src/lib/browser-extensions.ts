@@ -106,7 +106,7 @@ export function initializeExtensionCleaner(): () => void {
 /**
  * Hook untuk digunakan dalam komponen React
  */
-export function useExtensionCleaner(): void {
+export function useExtensionCleaner(): (() => void) | void {
   if (typeof window === 'undefined') return;
 
   // Jalankan setelah komponen mount
@@ -148,7 +148,7 @@ export function detectActiveExtensions(): string[] {
   }
   
   // Check MetaMask
-  if (window.ethereum || document.querySelector('[data-metamask]')) {
+  if ((window as any).ethereum || document.querySelector('[data-metamask]')) {
     activeExtensions.push('MetaMask');
   }
 

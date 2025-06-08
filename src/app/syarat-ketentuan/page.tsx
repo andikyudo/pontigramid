@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import PageLayout from '@/components/PageLayout';
-import { FileText, AlertTriangle, CheckCircle, XCircle, Scale, Users } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Scale, Users } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Syarat & Ketentuan - PontigramID',

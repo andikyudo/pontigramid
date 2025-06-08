@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { destroySession } from '@/lib/auth';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Destroy the session
     await destroySession();
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   // Allow GET method for logout as well
-  return POST(request);
+  return POST();
 }

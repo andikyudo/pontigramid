@@ -6,12 +6,12 @@ import mongoose from 'mongoose';
 // GET - Ambil berita berdasarkan ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    
-    const { id } = params;
+
+    const { id } = await params;
     
     // Validasi ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -47,12 +47,12 @@ export async function GET(
 // PUT - Update berita
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    
-    const { id } = params;
+
+    const { id } = await params;
     const body = await request.json();
     
     // Validasi ObjectId
@@ -120,12 +120,12 @@ export async function PUT(
 // DELETE - Hapus berita
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    
-    const { id } = params;
+
+    const { id } = await params;
     
     // Validasi ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {

@@ -1,5 +1,9 @@
 import mongoose from 'mongoose';
 
+export interface IFooterStatics extends mongoose.Model<IFooter> {
+  getOrCreateDefault(): Promise<IFooter>;
+}
+
 export interface IFooter extends mongoose.Document {
   footerLinks: {
     about: Array<{ name: string; href: string }>;
@@ -157,4 +161,4 @@ FooterSchema.statics.getOrCreateDefault = async function() {
   return footer;
 };
 
-export default mongoose.models.Footer || mongoose.model<IFooter>('Footer', FooterSchema);
+export default (mongoose.models.Footer as IFooterStatics) || mongoose.model<IFooter, IFooterStatics>('Footer', FooterSchema);

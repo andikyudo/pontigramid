@@ -1,17 +1,9 @@
-import { Metadata } from 'next';
+'use client';
+
 import PageLayout from '@/components/PageLayout';
 import { Rss, Download, Copy, ExternalLink, Smartphone, Globe, BookOpen } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'RSS Feed - PontigramID',
-  description: 'Berlangganan RSS feed PontigramID untuk mendapatkan update berita terbaru langsung di aplikasi pembaca RSS favorit Anda.',
-  keywords: 'rss feed, berlangganan, update berita, xml, feed reader, pontigramid',
-  openGraph: {
-    title: 'RSS Feed - PontigramID',
-    description: 'Berlangganan RSS feed PontigramID untuk mendapatkan update berita terbaru langsung di aplikasi pembaca RSS favorit Anda.',
-    type: 'website',
-  },
-};
+// Metadata will be handled by layout or parent component
 
 const rssFeeds = [
   {

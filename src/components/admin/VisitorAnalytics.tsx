@@ -221,7 +221,7 @@ export default function VisitorAnalytics() {
                 <span className="text-sm font-medium text-gray-700">Recent Visitors</span>
               </div>
               <div className="space-y-2">
-                {analytics.recent.slice(0, 3).map((visitor, index) => (
+                {analytics.recent.slice(0, 3).map((visitor) => (
                   <div key={visitor.ipAddress} className="text-xs">
                     <div className="flex items-center justify-between">
                       <code className="bg-gray-100 px-1 rounded text-gray-700">

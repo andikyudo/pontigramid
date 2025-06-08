@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Menu, X, Newspaper } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import SearchBox from '@/components/SearchBox';
 
 const categories = [

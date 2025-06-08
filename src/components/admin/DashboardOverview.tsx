@@ -197,7 +197,7 @@ export default function DashboardOverview() {
       title: 'Engagement',
       value: '94.2%',
       change: '+2.1%',
-      changeType: 'positive' as const,
+      changeType: 'positive' as 'positive' | 'negative' | 'neutral',
       icon: TrendingUp,
       description: 'Average engagement rate'
     }

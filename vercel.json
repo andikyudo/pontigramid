@@ -1,8 +1,5 @@
 {
   "version": 2,
-  "name": "pontigramid",
-  "alias": ["pontigramid"],
-  "regions": ["sin1", "hnd1", "syd1"],
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 30

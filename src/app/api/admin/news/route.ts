@@ -5,6 +5,14 @@ import { createSlug } from '@/lib/utils';
 export async function GET(request: NextRequest) {
   try {
     const { db } = await connectToDatabase();
+
+    if (!db) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     
     const page = parseInt(searchParams.get('page') || '1');
@@ -79,6 +87,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { db } = await connectToDatabase();
+
+    if (!db) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+
     const body = await request.json();
     
     const { title, content, excerpt, category, author, imageUrl, status, isBreakingNews } = body;

@@ -3,18 +3,16 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Save, 
-  Plus, 
-  Trash2, 
-  RotateCcw, 
-  Loader2, 
-  CheckCircle, 
+import {
+  Save,
+  Plus,
+  Trash2,
+  RotateCcw,
+  Loader2,
+  CheckCircle,
   AlertCircle,
   ExternalLink,
-  Mail,
-  Phone,
-  MapPin
+  Mail
 } from 'lucide-react';
 
 interface FooterLink {

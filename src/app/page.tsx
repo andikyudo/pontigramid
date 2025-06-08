@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import NewsCard from '@/components/NewsCard';
@@ -35,7 +35,7 @@ interface NewsResponse {
   };
 }
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -59,7 +59,7 @@ export default function Home() {
     if (searchParam && searchParam !== searchQuery) {
       setSearchQuery(searchParam);
     }
-  }, [searchParams]);
+  }, [searchParams, currentCategory, searchQuery]);
 
   const fetchNews = async (page: number = 1, category: string = 'all', search: string = '', append: boolean = false) => {
     try {
@@ -223,5 +223,28 @@ export default function Home() {
       {/* Footer */}
       <Footer />
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                <div className="h-48 bg-gray-200 rounded mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
+        </main>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
