@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import { ChevronLeft, ChevronRight, Calendar, Tag, Loader2 } from 'lucide-react';
 import { formatDateShort } from '@/lib/utils';
+import { useBreakingNews } from '@/hooks/useNews';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -14,17 +14,7 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
 
-interface NewsItem {
-  _id: string;
-  title: string;
-  excerpt: string;
-  category: string;
-  author: string;
-  imageUrl?: string;
-  isBreakingNews?: boolean;
-  createdAt: string;
-  slug: string;
-}
+
 
 const categoryColors: { [key: string]: string } = {
   politik: 'bg-red-500 text-white',
@@ -38,52 +28,8 @@ const categoryColors: { [key: string]: string } = {
 };
 
 export default function BreakingNewsSlider() {
-  const [headlines, setHeadlines] = useState<NewsItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    fetchHeadlines();
-  }, []);
-
-  const fetchHeadlines = async () => {
-    try {
-      // First try to get breaking news
-      const breakingResponse = await fetch('/api/news?published=true&isBreakingNews=true&limit=5&sort=createdAt');
-      const breakingData = await breakingResponse.json();
-
-      let allHeadlines = [];
-
-      if (breakingData.success && breakingData.news && Array.isArray(breakingData.news)) {
-        allHeadlines = breakingData.news;
-      }
-
-      // If we don't have enough breaking news, fill with regular news
-      if (allHeadlines.length < 5) {
-        const regularResponse = await fetch(`/api/news?published=true&limit=${5 - allHeadlines.length}&sort=createdAt`);
-        const regularData = await regularResponse.json();
-
-        if (regularData.success && regularData.news && Array.isArray(regularData.news)) {
-          // Filter out any news that are already in breaking news
-          const breakingIds = allHeadlines.map((news: NewsItem) => news._id);
-          const filteredRegular = regularData.news.filter((news: NewsItem) => !breakingIds.includes(news._id));
-          allHeadlines = [...allHeadlines, ...filteredRegular];
-        }
-      }
-
-      if (allHeadlines.length > 0) {
-        setHeadlines(allHeadlines);
-      } else {
-        setError('Gagal memuat berita headline');
-        setHeadlines([]);
-      }
-    } catch (error) {
-      console.error('Error fetching breaking news:', error);
-      setError('Terjadi kesalahan saat memuat berita');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use React Query for caching
+  const { data: headlines = [], isLoading: loading, isError, error } = useBreakingNews(5);
 
   if (loading) {
     return (
@@ -96,11 +42,11 @@ export default function BreakingNewsSlider() {
     );
   }
 
-  if (error || headlines.length === 0) {
+  if (isError || headlines.length === 0) {
     return (
       <section className="relative h-96 bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
-          <p className="text-lg">{error || 'Tidak ada berita headline tersedia'}</p>
+          <p className="text-lg">{error?.message || 'Tidak ada berita headline tersedia'}</p>
         </div>
       </section>
     );
@@ -188,11 +134,9 @@ export default function BreakingNewsSlider() {
                   <div className="max-w-4xl">
                     {/* Category Badge & Breaking News Badge */}
                     <div className="mb-3 sm:mb-4 flex items-center gap-2 flex-wrap">
-                      {news.isBreakingNews && (
-                        <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-red-600 text-white animate-pulse">
-                          🔥 BREAKING
-                        </span>
-                      )}
+                      <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-red-600 text-white animate-pulse">
+                        🔥 BREAKING
+                      </span>
                       <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${categoryColors[news.category] || categoryColors.umum}`}>
                         <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
                         {news.category.charAt(0).toUpperCase() + news.category.slice(1)}

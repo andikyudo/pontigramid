@@ -1,58 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { AlertCircle, Loader2 } from 'lucide-react';
-
-interface NewsItem {
-  _id: string;
-  title: string;
-  slug: string;
-  category: string;
-  createdAt: string;
-}
+import { useBreakingNews } from '@/hooks/useNews';
 
 export default function RunningTextTicker() {
-  const [news, setNews] = useState<NewsItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [isPaused, setIsPaused] = useState(false);
   const tickerRef = useRef<HTMLDivElement>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    fetchLatestNews();
-    
-    // Auto-refresh every 5 minutes
-    const refreshInterval = setInterval(fetchLatestNews, 5 * 60 * 1000);
-    
-    return () => {
-      clearInterval(refreshInterval);
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, []);
-
-  const fetchLatestNews = async () => {
-    try {
-      const response = await fetch('/api/news?published=true&limit=8&sort=createdAt');
-      const data = await response.json();
-      
-      if (data.success && data.news && Array.isArray(data.news)) {
-        setNews(data.news);
-        setError('');
-      } else {
-        setError('Gagal memuat berita terbaru');
-        setNews([]);
-      }
-    } catch (error) {
-      console.error('Error fetching ticker news:', error);
-      setError('Terjadi kesalahan saat memuat berita');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use React Query for caching
+  const { data: news = [], isLoading: loading, isError, error } = useBreakingNews(8);
 
   const handleMouseEnter = () => {
     setIsPaused(true);
@@ -73,13 +31,13 @@ export default function RunningTextTicker() {
     );
   }
 
-  if (error || news.length === 0) {
+  if (isError || news.length === 0) {
     return (
       <div className="bg-red-600 text-white py-2 overflow-hidden">
         <div className="flex items-center justify-center">
           <AlertCircle className="h-4 w-4 mr-2" />
           <span className="text-sm font-medium">
-            {error || 'Tidak ada berita terbaru'}
+            {error?.message || 'Tidak ada berita terbaru'}
           </span>
         </div>
       </div>

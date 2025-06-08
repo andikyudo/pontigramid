@@ -151,7 +151,9 @@ export const useTrendingNews = (limit: number = 6) => {
       return newsWithViews;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes in cache
+    gcTime: 20 * 60 * 1000, // 20 minutes in cache
+    refetchOnMount: false, // Don't refetch on component mount if data is fresh
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 };
 
@@ -160,19 +162,34 @@ export const useBreakingNews = (limit: number = 5) => {
   return useQuery({
     queryKey: ['breaking-news', limit],
     queryFn: async (): Promise<NewsItem[]> => {
-      const response = await fetch(`/api/news?published=true&limit=${limit}&sort=createdAt`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch breaking news');
+      // First try to get breaking news
+      const breakingResponse = await fetch(`/api/news?published=true&isBreakingNews=true&limit=${limit}&sort=createdAt`);
+      const breakingData = await breakingResponse.json();
+
+      let allHeadlines = [];
+
+      if (breakingData.success && breakingData.news && Array.isArray(breakingData.news)) {
+        allHeadlines = breakingData.news;
       }
 
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error('Failed to fetch breaking news');
+      // If we don't have enough breaking news, fill with regular news
+      if (allHeadlines.length < limit) {
+        const regularResponse = await fetch(`/api/news?published=true&limit=${limit - allHeadlines.length}&sort=createdAt`);
+        const regularData = await regularResponse.json();
+
+        if (regularData.success && regularData.news && Array.isArray(regularData.news)) {
+          // Filter out any news that are already in breaking news
+          const breakingIds = allHeadlines.map((news: NewsItem) => news._id);
+          const filteredRegular = regularData.news.filter((news: NewsItem) => !breakingIds.includes(news._id));
+          allHeadlines = [...allHeadlines, ...filteredRegular];
+        }
       }
 
-      return data.news;
+      return allHeadlines;
     },
     staleTime: 2 * 60 * 1000, // 2 minutes for breaking news
-    gcTime: 10 * 60 * 1000, // 10 minutes in cache
+    gcTime: 15 * 60 * 1000, // 15 minutes in cache
+    refetchOnMount: false, // Don't refetch on component mount if data is fresh
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 };

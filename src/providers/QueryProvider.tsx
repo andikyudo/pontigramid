@@ -10,16 +10,20 @@ export default function QueryProvider({ children }: { children: React.ReactNode 
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Cache for 5 minutes
-            staleTime: 5 * 60 * 1000,
-            // Keep in cache for 10 minutes
-            gcTime: 10 * 60 * 1000,
+            // Cache for 3 minutes for news content
+            staleTime: 3 * 60 * 1000,
+            // Keep in cache for 15 minutes
+            gcTime: 15 * 60 * 1000,
             // Retry failed requests 2 times
             retry: 2,
             // Don't refetch on window focus for better mobile experience
             refetchOnWindowFocus: false,
             // Don't refetch on reconnect for mobile data saving
             refetchOnReconnect: false,
+            // Enable background refetch for fresh data
+            refetchOnMount: 'always',
+            // Network mode for better offline experience
+            networkMode: 'offlineFirst',
           },
         },
       })
