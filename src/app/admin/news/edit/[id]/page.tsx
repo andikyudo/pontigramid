@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Save, Eye, Loader2 } from 'lucide-react';
+import AdminAuth from '@/components/admin/AdminAuth';
 
 const categories = [
   { value: 'politik', label: 'Politik' },
@@ -66,15 +67,8 @@ export default function EditNews() {
   }, [id]);
 
   useEffect(() => {
-    // Check authentication
-    const token = localStorage.getItem('admin_token');
-    if (!token) {
-      router.push('/admin');
-      return;
-    }
-
     fetchNews();
-  }, [router, fetchNews]);
+  }, [fetchNews]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -148,18 +142,19 @@ export default function EditNews() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/admin/dashboard">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Kembali ke Dashboard
-            </Button>
-          </Link>
-        </div>
-      </header>
+    <AdminAuth>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <Link href="/admin/dashboard">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Kembali ke Dashboard
+              </Button>
+            </Link>
+          </div>
+        </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card>
@@ -348,5 +343,6 @@ export default function EditNews() {
         </Card>
       </main>
     </div>
+    </AdminAuth>
   );
 }
