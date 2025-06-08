@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    
+
     if (!file) {
       return NextResponse.json(
         { success: false, error: 'No file uploaded' },
         { status: 400 }
       );
     }
-    
+
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
@@ -23,43 +20,31 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    // Validate file size (max 2MB for base64 storage)
+    const maxSize = 2 * 1024 * 1024; // 2MB
     if (file.size > maxSize) {
       return NextResponse.json(
-        { success: false, error: 'File too large. Maximum size is 5MB.' },
+        { success: false, error: 'File too large. Maximum size is 2MB for now.' },
         { status: 400 }
       );
     }
-    
+
+    // Convert file to base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    
-    // Create unique filename
-    const timestamp = Date.now();
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const filename = `${timestamp}_${originalName}`;
-    
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'public', 'uploads');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-    
-    // Save file
-    const filepath = join(uploadsDir, filename);
-    await writeFile(filepath, buffer);
-    
-    // Return public URL
-    const publicUrl = `/uploads/${filename}`;
-    
+    const base64 = buffer.toString('base64');
+
+    // Create data URL
+    const dataUrl = `data:${file.type};base64,${base64}`;
+
     return NextResponse.json({
       success: true,
-      url: publicUrl,
-      filename,
+      url: dataUrl,
+      filename: file.name,
       size: file.size,
-      type: file.type
+      type: file.type,
+      message: 'Image uploaded successfully (stored as base64)'
     });
   } catch (error) {
     console.error('Error uploading file:', error);

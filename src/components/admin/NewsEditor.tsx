@@ -87,11 +87,12 @@ export default function NewsEditor() {
         body: formData,
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
+      if (data.success) {
         setFormData(prev => ({ ...prev, imageUrl: data.url }));
+        alert('Gambar berhasil diupload!');
       } else {
-        alert('Gagal upload gambar');
+        alert(data.error || 'Gagal upload gambar');
       }
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -104,10 +105,18 @@ export default function NewsEditor() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        alert('Ukuran file maksimal 5MB');
+      // Validate file size (2MB limit)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Ukuran file maksimal 2MB. Silakan kompres gambar terlebih dahulu.');
         return;
       }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('File harus berupa gambar');
+        return;
+      }
+
       handleImageUpload(file);
     }
   };
@@ -425,7 +434,7 @@ export default function NewsEditor() {
                   <>
                     <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                     <p className="text-sm text-gray-600">Klik untuk upload gambar</p>
-                    <p className="text-xs text-gray-500 mt-1">Maksimal 5MB</p>
+                    <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG, WebP, GIF • Maksimal: 2MB</p>
                   </>
                 )}
               </div>

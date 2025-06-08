@@ -51,13 +51,7 @@
       "destination": "/api/robots"
     }
   ],
-  "redirects": [
-    {
-      "source": "/admin/dashboard",
-      "destination": "/admin",
-      "permanent": true
-    }
-  ],
+
   "env": {
     "NODE_ENV": "production"
   },

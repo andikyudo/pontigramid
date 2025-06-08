@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir, unlink } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,41 +20,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (2MB limit for base64 storage)
+    if (file.size > 2 * 1024 * 1024) {
       return NextResponse.json(
-        { success: false, error: 'File size must be less than 5MB' },
+        { success: false, error: 'File size must be less than 2MB' },
         { status: 400 }
       );
     }
 
+    // Convert file to base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const base64 = buffer.toString('base64');
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'public', 'uploads');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
-    // Generate unique filename
-    const timestamp = Date.now();
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '');
-    const filename = `${timestamp}-${originalName}`;
-    const filepath = join(uploadsDir, filename);
-
-    // Write file
-    await writeFile(filepath, buffer);
-
-    // Return the URL
-    const url = `/uploads/${filename}`;
+    // Create data URL
+    const dataUrl = `data:${file.type};base64,${base64}`;
 
     return NextResponse.json({
       success: true,
-      url,
-      filename,
+      url: dataUrl,
+      filename: file.name,
       size: file.size,
-      type: file.type
+      type: file.type,
+      message: 'Image uploaded successfully (stored as base64)'
     });
 
   } catch (error) {
@@ -69,32 +54,4 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Handle file deletion
-export async function DELETE(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const filename = searchParams.get('filename');
 
-    if (!filename) {
-      return NextResponse.json(
-        { success: false, error: 'Filename required' },
-        { status: 400 }
-      );
-    }
-
-    const filepath = join(process.cwd(), 'public', 'uploads', filename);
-    
-    if (existsSync(filepath)) {
-      await unlink(filepath);
-    }
-
-    return NextResponse.json({ success: true });
-
-  } catch (error) {
-    console.error('Delete error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Delete failed' },
-      { status: 500 }
-    );
-  }
-}

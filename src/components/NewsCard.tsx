@@ -34,13 +34,23 @@ export default function NewsCard({ news }: NewsCardProps) {
       <Link href={`/berita/${news.slug}`}>
         <div className="relative h-48 w-full">
           {news.imageUrl ? (
-            <Image
-              src={news.imageUrl}
-              alt={news.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
+            news.imageUrl.startsWith('data:') ? (
+              // Handle base64 images with regular img tag
+              <img
+                src={news.imageUrl}
+                alt={news.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              // Handle regular URLs with Next.js Image
+              <Image
+                src={news.imageUrl}
+                alt={news.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
+            )
           ) : (
             <div className="w-full h-full bg-gray-200 flex items-center justify-center">
               <div className="text-gray-400 text-center">

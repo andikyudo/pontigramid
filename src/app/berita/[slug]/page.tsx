@@ -95,14 +95,24 @@ export default async function NewsDetail({ params }: NewsDetailProps) {
           {/* Featured Image */}
           {news.imageUrl && (
             <div className="relative h-64 sm:h-80 md:h-96">
-              <Image
-                src={news.imageUrl}
-                alt={news.title}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-              />
+              {news.imageUrl.startsWith('data:') ? (
+                // Handle base64 images with regular img tag
+                <img
+                  src={news.imageUrl}
+                  alt={news.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                // Handle regular URLs with Next.js Image
+                <Image
+                  src={news.imageUrl}
+                  alt={news.title}
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                />
+              )}
             </div>
           )}
 

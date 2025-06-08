@@ -137,6 +137,19 @@ export default function NewsForm({ initialData, isEdit = false, newsId }: NewsFo
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file size (2MB limit)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ukuran file maksimal 2MB. Silakan kompres gambar terlebih dahulu.');
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Format file tidak didukung. Gunakan JPG, PNG, WebP, atau GIF.');
+      return;
+    }
+
     setImageUploading(true);
     try {
       const formData = new FormData();
@@ -150,9 +163,13 @@ export default function NewsForm({ initialData, isEdit = false, newsId }: NewsFo
       const result = await response.json();
       if (result.success) {
         setFormData(prev => ({ ...prev, imageUrl: result.url }));
+        alert('Gambar berhasil diupload!');
+      } else {
+        alert(result.error || 'Gagal mengupload gambar');
       }
     } catch (error) {
       console.error('Error uploading image:', error);
+      alert('Terjadi kesalahan saat mengupload gambar');
     } finally {
       setImageUploading(false);
     }
@@ -195,13 +212,23 @@ export default function NewsForm({ initialData, isEdit = false, newsId }: NewsFo
           <CardContent className="p-8">
             {formData.imageUrl && (
               <div className="relative w-full h-64 mb-6 bg-gray-100 rounded-lg overflow-hidden">
-                <Image
-                  src={formData.imageUrl}
-                  alt={formData.title || 'Preview image'}
-                  fill
-                  className={`rounded-lg transition-all duration-300 ${imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
-                />
+                {formData.imageUrl.startsWith('data:') ? (
+                  // Handle base64 images with regular img tag
+                  <img
+                    src={formData.imageUrl}
+                    alt={formData.title || 'Preview image'}
+                    className={`w-full h-full rounded-lg transition-all duration-300 ${imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
+                  />
+                ) : (
+                  // Handle regular URLs with Next.js Image
+                  <Image
+                    src={formData.imageUrl}
+                    alt={formData.title || 'Preview image'}
+                    fill
+                    className={`rounded-lg transition-all duration-300 ${imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
+                  />
+                )}
                 {/* Image Fit Toggle */}
                 <div className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-lg p-1">
                   <button
@@ -390,13 +417,23 @@ export default function NewsForm({ initialData, isEdit = false, newsId }: NewsFo
               {formData.imageUrl ? (
                 <div className="space-y-3">
                   <div className="relative w-full h-40 bg-gray-100 rounded-lg overflow-hidden">
-                    <Image
-                      src={formData.imageUrl}
-                      alt="Preview"
-                      fill
-                      className={`rounded-lg transition-all duration-300 ${imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
-                      sizes="(max-width: 768px) 100vw, 400px"
-                    />
+                    {formData.imageUrl.startsWith('data:') ? (
+                      // Handle base64 images with regular img tag
+                      <img
+                        src={formData.imageUrl}
+                        alt="Preview"
+                        className={`w-full h-full rounded-lg transition-all duration-300 ${imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
+                      />
+                    ) : (
+                      // Handle regular URLs with Next.js Image
+                      <Image
+                        src={formData.imageUrl}
+                        alt="Preview"
+                        fill
+                        className={`rounded-lg transition-all duration-300 ${imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
+                        sizes="(max-width: 768px) 100vw, 400px"
+                      />
+                    )}
                     <button
                       onClick={() => setFormData({ ...formData, imageUrl: '' })}
                       className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
@@ -443,6 +480,9 @@ export default function NewsForm({ initialData, isEdit = false, newsId }: NewsFo
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                   <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                   <p className="text-sm text-gray-600 mb-2">Upload gambar utama</p>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Format: JPG, PNG, WebP, GIF • Maksimal: 2MB
+                  </p>
                   <input
                     type="file"
                     accept="image/*"
@@ -453,9 +493,16 @@ export default function NewsForm({ initialData, isEdit = false, newsId }: NewsFo
                   />
                   <label
                     htmlFor="image-upload"
-                    className="cursor-pointer inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    className="cursor-pointer inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
                   >
-                    {imageUploading ? 'Uploading...' : 'Pilih File'}
+                    {imageUploading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                        Uploading...
+                      </>
+                    ) : (
+                      'Pilih File'
+                    )}
                   </label>
                 </div>
               )}
