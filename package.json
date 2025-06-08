@@ -7,11 +7,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "node scripts/seed-data.js",
+    "lint:fix": "next lint --fix",
     "type-check": "tsc --noEmit",
+    "test": "npm run lint && npm run type-check",
+    "seed": "node scripts/seed-data.js",
+    "init-db": "node scripts/init-missing-collections.mjs",
     "build:analyze": "ANALYZE=true npm run build",
     "check-extensions": "node scripts/check-extensions.js",
-    "dev:clean": "npm run check-extensions && npm run dev"
+    "dev:clean": "npm run check-extensions && npm run dev",
+    "deploy": "vercel --prod",
+    "deploy:preview": "vercel",
+    "postbuild": "echo 'Build completed successfully!'"
   },
   "dependencies": {
     "@next-auth/mongodb-adapter": "^1.1.3",

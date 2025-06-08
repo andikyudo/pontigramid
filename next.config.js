@@ -1,5 +1,36 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Security headers for production
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'off',
+          },
+        ],
+      },
+    ];
+  },
+
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
@@ -38,8 +69,16 @@ const nextConfig = {
     return config;
   },
   images: {
-    domains: ['images.unsplash.com'],
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+      },
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
@@ -47,6 +86,8 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
   },
   // Enable React strict mode for better error detection
   reactStrictMode: true,
