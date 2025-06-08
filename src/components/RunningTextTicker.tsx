@@ -108,7 +108,7 @@ export default function RunningTextTicker() {
               isPaused ? 'animation-paused' : ''
             }`}
             style={{
-              animation: 'scroll-left 60s linear infinite',
+              animation: 'scroll-left 25s linear infinite',
             }}
           >
             {/* Duplicate news items for seamless loop */}

@@ -12,6 +12,7 @@ import PopularCategories from '@/components/PopularCategories';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useInfiniteNews } from '@/hooks/useNews';
 
 interface NewsItem {
   _id: string;
@@ -39,13 +40,22 @@ function HomeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [news, setNews] = useState<NewsItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [currentCategory, setCurrentCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Use React Query for infinite loading
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    error
+  } = useInfiniteNews(currentCategory, searchQuery, 12);
+
+  // Flatten the paginated data
+  const news = data?.pages.flatMap(page => page.news) || [];
 
   // Initialize state from URL parameters
   useEffect(() => {
@@ -61,60 +71,10 @@ function HomeContent() {
     }
   }, [searchParams, currentCategory, searchQuery]);
 
-  const fetchNews = async (page: number = 1, category: string = 'all', search: string = '', append: boolean = false) => {
-    try {
-      if (!append) setLoading(true);
-      else setLoadingMore(true);
 
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: '12',
-        published: 'true',
-        sort: 'createdAt' // Ensure chronological sorting (newest first)
-      });
-
-      if (category !== 'all') {
-        params.append('category', category);
-      }
-
-      if (search) {
-        params.append('search', search);
-      }
-
-      const response = await fetch(`/api/news?${params}`);
-      const data: NewsResponse = await response.json();
-
-      if (data.success && data.news && Array.isArray(data.news)) {
-        if (append) {
-          setNews(prev => [...prev, ...data.news]);
-        } else {
-          setNews(data.news);
-        }
-        if (data.pagination) {
-          setTotalPages(data.pagination.pages || 1);
-          setCurrentPage(page);
-        }
-      } else {
-        // Handle case where no data is returned
-        if (!append) {
-          setNews([]);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching news:', error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchNews(1, currentCategory, searchQuery);
-  }, [currentCategory, searchQuery]);
 
   const handleCategoryChange = (category: string) => {
     setCurrentCategory(category);
-    setCurrentPage(1);
 
     // Update URL parameters
     const params = new URLSearchParams(searchParams.toString());
@@ -128,7 +88,6 @@ function HomeContent() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1);
 
     // Update URL parameters
     const params = new URLSearchParams(searchParams.toString());
@@ -141,8 +100,8 @@ function HomeContent() {
   };
 
   const loadMore = () => {
-    if (currentPage < totalPages) {
-      fetchNews(currentPage + 1, currentCategory, searchQuery, true);
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
@@ -172,10 +131,15 @@ function HomeContent() {
         </div>
 
         {/* Loading State */}
-        {loading ? (
+        {isLoading ? (
           <div className="flex justify-center items-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
             <span className="ml-2 text-gray-600">Memuat berita...</span>
+          </div>
+        ) : isError ? (
+          <div className="text-center py-12">
+            <p className="text-red-500 text-lg">Terjadi kesalahan saat memuat berita</p>
+            <p className="text-gray-500 text-sm mt-2">{error?.message}</p>
           </div>
         ) : (
           <>
@@ -193,14 +157,14 @@ function HomeContent() {
             )}
 
             {/* Load More Button */}
-            {currentPage < totalPages && (
+            {hasNextPage && (
               <div className="text-center">
                 <Button
                   onClick={loadMore}
-                  disabled={loadingMore}
+                  disabled={isFetchingNextPage}
                   size="lg"
                 >
-                  {loadingMore ? (
+                  {isFetchingNextPage ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       Memuat...

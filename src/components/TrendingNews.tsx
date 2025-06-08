@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { TrendingUp, Calendar, User, Eye } from 'lucide-react';
 import { formatDateShort } from '@/lib/utils';
 import { useInView } from 'react-intersection-observer';
+import { useTrendingNews } from '@/hooks/useNews';
 
 interface NewsItem {
   _id: string;
@@ -31,44 +31,13 @@ const categoryColors: { [key: string]: string } = {
 };
 
 export default function TrendingNews() {
-  const [trendingNews, setTrendingNews] = useState<NewsItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  
   const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
   });
 
-  useEffect(() => {
-    if (inView) {
-      fetchTrendingNews();
-    }
-  }, [inView]);
-
-  const fetchTrendingNews = async () => {
-    try {
-      // Simulate trending logic by getting recent popular news
-      const response = await fetch('/api/news?published=true&limit=6&sort=createdAt');
-      const data = await response.json();
-
-      if (data.success && data.news && Array.isArray(data.news)) {
-        // Add mock view counts for trending effect
-        const newsWithViews = data.news.map((news: NewsItem, index: number) => ({
-          ...news,
-          views: Math.floor(Math.random() * 5000) + 1000 + (6 - index) * 500
-        }));
-        setTrendingNews(newsWithViews);
-      } else {
-        setError('Gagal memuat berita trending');
-      }
-    } catch (error) {
-      console.error('Error fetching trending news:', error);
-      setError('Terjadi kesalahan saat memuat berita trending');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use React Query hook with conditional fetching
+  const { data: trendingNews = [], isLoading: loading, isError, error } = useTrendingNews(6);
 
   const LoadingSkeleton = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -107,12 +76,12 @@ export default function TrendingNews() {
         {/* Content */}
         {loading ? (
           <LoadingSkeleton />
-        ) : error ? (
+        ) : isError ? (
           <div className="text-center py-12">
             <div className="text-red-500 mb-4">
               <TrendingUp className="h-16 w-16 mx-auto opacity-50" />
             </div>
-            <p className="text-gray-600 text-lg">{error}</p>
+            <p className="text-gray-600 text-lg">{error?.message || 'Terjadi kesalahan'}</p>
           </div>
         ) : (
           <>

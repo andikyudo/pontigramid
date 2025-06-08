@@ -1,49 +1,17 @@
-import { notFound } from 'next/navigation';
+'use client';
+
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
-import { Calendar, User, Tag, ArrowLeft, Clock } from 'lucide-react';
-// import { Button } from '@/components/ui/button';
+import { Calendar, User, Tag, ArrowLeft, Clock, Loader2 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SocialShareButtons from '@/components/SocialShareButtons';
+import { useNewsArticle } from '@/hooks/useNews';
+import { useParams } from 'next/navigation';
 
-interface NewsDetailProps {
-  params: Promise<{
-    slug: string;
-  }>;
-}
 
-interface NewsItem {
-  _id: string;
-  title: string;
-  content: string;
-  excerpt: string;
-  category: string;
-  author: string;
-  imageUrl?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-async function getNews(slug: string): Promise<NewsItem | null> {
-  try {
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/news/slug/${slug}`, {
-      cache: 'no-store'
-    });
-    
-    if (!response.ok) {
-      return null;
-    }
-    
-    const data = await response.json();
-    return data.success ? data.data : null;
-  } catch (error) {
-    console.error('Error fetching news:', error);
-    return null;
-  }
-}
 
 const categoryColors: { [key: string]: string } = {
   politik: 'bg-red-100 text-red-800',
@@ -56,12 +24,47 @@ const categoryColors: { [key: string]: string } = {
   umum: 'bg-gray-100 text-gray-800'
 };
 
-export default async function NewsDetail({ params }: NewsDetailProps) {
-  const { slug } = await params;
-  const news = await getNews(slug);
+export default function NewsDetail() {
+  const resolvedParams = useParams();
+  const slug = resolvedParams.slug as string;
 
-  if (!news) {
-    notFound();
+  const { data: news, isLoading, isError } = useNewsArticle(slug);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8">
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <span className="ml-2 text-gray-600">Memuat artikel...</span>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (isError || !news) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8">
+          <div className="text-center py-20">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Artikel Tidak Ditemukan</h1>
+            <p className="text-gray-600 mb-8">Artikel yang Anda cari tidak ditemukan atau telah dihapus.</p>
+            <Link
+              href="/"
+              className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors duration-300"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Kembali ke Beranda
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -193,54 +196,4 @@ export default async function NewsDetail({ params }: NewsDetailProps) {
   );
 }
 
-export async function generateMetadata({ params }: NewsDetailProps) {
-  const { slug } = await params;
-  const news = await getNews(slug);
 
-  if (!news) {
-    return {
-      title: 'Berita Tidak Ditemukan - PontigramID',
-      description: 'Halaman berita yang Anda cari tidak ditemukan.'
-    };
-  }
-
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  const currentUrl = `${baseUrl}/berita/${slug}`;
-
-  return {
-    title: `${news.title} - PontigramID`,
-    description: news.excerpt,
-    keywords: `${news.category}, berita, ${news.title}`,
-    authors: [{ name: news.author }],
-    openGraph: {
-      title: news.title,
-      description: news.excerpt,
-      url: currentUrl,
-      siteName: 'PontigramID',
-      images: news.imageUrl ? [
-        {
-          url: news.imageUrl,
-          width: 1200,
-          height: 630,
-          alt: news.title,
-        }
-      ] : [],
-      locale: 'id_ID',
-      type: 'article',
-      publishedTime: news.createdAt,
-      modifiedTime: news.updatedAt,
-      section: news.category,
-      authors: [news.author],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: news.title,
-      description: news.excerpt,
-      images: news.imageUrl ? [news.imageUrl] : [],
-      creator: '@pontigramid',
-    },
-    alternates: {
-      canonical: currentUrl,
-    },
-  };
-}

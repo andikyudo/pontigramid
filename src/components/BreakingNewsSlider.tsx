@@ -130,7 +130,7 @@ export default function BreakingNewsSlider() {
           bulletActiveClass: 'swiper-pagination-bullet-active-custom',
         }}
         autoplay={{
-          delay: 5000,
+          delay: 4000,
           disableOnInteraction: false,
         }}
         effect="fade"
