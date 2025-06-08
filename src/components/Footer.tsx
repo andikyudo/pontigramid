@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Newspaper,
+  Globe,
   Mail,
   Phone,
   MapPin,
@@ -166,7 +166,10 @@ export default function Footer() {
           {/* About Us Column */}
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center mb-4 sm:mb-6">
-              <Newspaper className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 mr-2 sm:mr-3" />
+              <div className="relative p-2 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg mr-3">
+                <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-yellow-400 rounded-full"></div>
+              </div>
               <span className="text-xl sm:text-2xl font-bold">{companyInfo.name}</span>
             </div>
 
@@ -357,10 +360,6 @@ export default function Footer() {
             </div>
 
             <div className="flex items-center space-x-6 text-sm text-gray-400">
-              <span>Powered by {footerData?.companyInfo?.poweredBy || 'Next.js'}</span>
-              <span>•</span>
-              <span>Hosted on {footerData?.companyInfo?.hostedOn || 'Vercel'}</span>
-              <span>•</span>
               <Link href="/sitemap" className="hover:text-white transition-colors">
                 Sitemap
               </Link>

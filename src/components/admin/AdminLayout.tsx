@@ -4,19 +4,19 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import VisitorAnalytics from './VisitorAnalytics';
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Tags, 
-  Users, 
-  Settings, 
-  BarChart3, 
-  Menu, 
-  X, 
+import {
+  LayoutDashboard,
+  FileText,
+  Tags,
+  Users,
+  Settings,
+  BarChart3,
+  Menu,
+  X,
   LogOut,
   Bell,
   Search,
-  Newspaper,
+  Globe,
   MessageSquare,
   Image,
   Activity
@@ -192,8 +192,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-            <Link href="/admin/dashboard" className="flex items-center space-x-2">
-              <Newspaper className="h-8 w-8 text-blue-600" />
+            <Link href="/admin/dashboard" className="flex items-center space-x-3">
+              <div className="relative p-2 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg">
+                <Globe className="h-5 w-5 text-white" />
+                <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-yellow-400 rounded-full"></div>
+              </div>
               <span className="text-xl font-bold text-gray-900">Admin Panel</span>
             </Link>
             <button

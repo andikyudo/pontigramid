@@ -108,46 +108,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">P</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">
-                  PontigramID Admin
-                </h1>
-                <p className="text-xs text-gray-500">Dashboard</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span>Online</span>
-              </div>
-              <Link
-                href="/admin"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Admin Home
-              </Link>
-              <Link
-                href="/"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium transition-colors"
-              >
-                View Site
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div className="p-6 space-y-6">
 
         {/* Welcome Section */}
         <div className="mb-8">
@@ -456,8 +417,6 @@ export default function AdminDashboard() {
 
           </div>
         </div>
-
-      </main>
     </div>
   );
 }
