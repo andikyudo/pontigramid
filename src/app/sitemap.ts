@@ -3,7 +3,7 @@ import connectDB from '@/lib/mongodb';
 import News from '@/models/News';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://www.pontigram.id';
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [

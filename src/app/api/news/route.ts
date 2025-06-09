@@ -34,7 +34,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      query.$text = { $search: search };
+      // Use regex search for better compatibility and partial matching
+      const searchRegex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      query.$or = [
+        { title: { $regex: searchRegex } },
+        { content: { $regex: searchRegex } },
+        { excerpt: { $regex: searchRegex } },
+        { category: { $regex: searchRegex } }
+      ];
     }
     
     // Build sort object

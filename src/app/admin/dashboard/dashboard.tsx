@@ -363,6 +363,13 @@ export default function AdminDashboard() {
                     <span>Kelola Users</span>
                   </Link>
                   <Link
+                    href="/admin/team"
+                    className="w-full bg-teal-600 text-white px-4 py-3 rounded-lg text-center hover:bg-teal-700 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <span>👥</span>
+                    <span>Tim Redaksi</span>
+                  </Link>
+                  <Link
                     href="/admin/footer"
                     className="w-full bg-gray-600 text-white px-4 py-3 rounded-lg text-center hover:bg-gray-700 transition-colors flex items-center justify-center space-x-2"
                   >

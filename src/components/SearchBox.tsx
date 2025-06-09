@@ -22,6 +22,7 @@ export default function SearchBox({ onSearch, className }: SearchBoxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -62,15 +63,29 @@ export default function SearchBox({ onSearch, className }: SearchBoxProps) {
 
   const searchNews = async (searchQuery: string) => {
     setLoading(true);
+    setError('');
+
     try {
       const response = await fetch(`/api/news?search=${encodeURIComponent(searchQuery)}&limit=5&published=true`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
-      
-      if (data.success) {
-        setResults(data.data);
+
+      if (data.success && data.news) {
+        setResults(data.news);
+        setError('');
+      } else {
+        console.warn('Search API returned no results or failed:', data);
+        setResults([]);
+        setError('');
       }
     } catch (error) {
       console.error('Search error:', error);
+      setResults([]);
+      setError('Terjadi kesalahan saat mencari. Silakan coba lagi.');
     } finally {
       setLoading(false);
     }
@@ -142,6 +157,16 @@ export default function SearchBox({ onSearch, className }: SearchBoxProps) {
                 <div className="p-4 text-center text-gray-500">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
                   <p className="mt-2">Mencari...</p>
+                </div>
+              ) : error ? (
+                <div className="p-4 text-center text-red-500">
+                  <p>{error}</p>
+                  <button
+                    onClick={() => searchNews(query)}
+                    className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Coba lagi
+                  </button>
                 </div>
               ) : results.length > 0 ? (
                 <div>

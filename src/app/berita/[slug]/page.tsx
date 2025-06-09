@@ -8,6 +8,7 @@ import { Calendar, User, Tag, ArrowLeft, Clock, Loader2 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SocialShareButtons from '@/components/SocialShareButtons';
+import RelatedNews from '@/components/RelatedNews';
 import { useNewsArticle } from '@/hooks/useNews';
 import { useParams } from 'next/navigation';
 
@@ -67,7 +68,7 @@ export default function NewsDetail() {
     );
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.pontigram.id';
   const currentUrl = `${baseUrl}/berita/${slug}`;
   const readingTime = Math.ceil(news.content.split(' ').length / 200);
 
@@ -167,7 +168,6 @@ export default function NewsDetail() {
                   Terakhir diperbarui: {formatDate(news.updatedAt)}
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">Bagikan:</span>
                   <div className="flex space-x-2 lg:hidden">
                     {/* Mobile share buttons are handled by SocialShareButtons component */}
                   </div>
@@ -178,14 +178,11 @@ export default function NewsDetail() {
         </article>
 
         {/* Related Articles Section */}
-        <section className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">
-            Berita Terkait
-          </h2>
-          <div className="text-center py-8 text-gray-500">
-            <p>Fitur berita terkait akan segera hadir...</p>
-          </div>
-        </section>
+        <RelatedNews
+          category={news.category}
+          currentSlug={slug}
+          limit={6}
+        />
       </main>
 
       {/* Add bottom padding for mobile share buttons */}

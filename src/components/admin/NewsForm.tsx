@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
   Eye,
-  Upload,
   X,
   AlertCircle,
   Clock,
@@ -16,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import RichTextEditor from './RichTextEditor';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import ImageUploadWithCompression from '@/components/ImageUploadWithCompression';
 import { createSlug } from '@/lib/utils';
 
 interface NewsFormData {
@@ -53,7 +53,6 @@ export default function NewsForm({ initialData, isEdit = false, newsId }: NewsFo
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState(false);
-  const [imageUploading, setImageUploading] = useState(false);
   const [imageFit, setImageFit] = useState<'cover' | 'contain'>('contain');
   const [isClient, setIsClient] = useState(false);
 
@@ -133,47 +132,7 @@ export default function NewsForm({ initialData, isEdit = false, newsId }: NewsFo
     }
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
 
-    // Validate file size (2MB limit)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Ukuran file maksimal 2MB. Silakan kompres gambar terlebih dahulu.');
-      return;
-    }
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowedTypes.includes(file.type)) {
-      alert('Format file tidak didukung. Gunakan JPG, PNG, WebP, atau GIF.');
-      return;
-    }
-
-    setImageUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('/api/admin/upload', {
-        method: 'POST',
-        body: formData
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        setFormData(prev => ({ ...prev, imageUrl: result.url }));
-        alert('Gambar berhasil diupload!');
-      } else {
-        alert(result.error || 'Gagal mengupload gambar');
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Terjadi kesalahan saat mengupload gambar');
-    } finally {
-      setImageUploading(false);
-    }
-  };
 
   const categories = [
     { value: 'politik', label: 'Politik' },
@@ -414,98 +373,13 @@ export default function NewsForm({ initialData, isEdit = false, newsId }: NewsFo
               <CardTitle>Gambar Utama</CardTitle>
             </CardHeader>
             <CardContent>
-              {formData.imageUrl ? (
-                <div className="space-y-3">
-                  <div className="relative w-full h-40 bg-gray-100 rounded-lg overflow-hidden">
-                    {formData.imageUrl.startsWith('data:') ? (
-                      // Handle base64 images with regular img tag
-                      <img
-                        src={formData.imageUrl}
-                        alt="Preview"
-                        className={`w-full h-full rounded-lg transition-all duration-300 ${imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
-                      />
-                    ) : (
-                      // Handle regular URLs with Next.js Image
-                      <Image
-                        src={formData.imageUrl}
-                        alt="Preview"
-                        fill
-                        className={`rounded-lg transition-all duration-300 ${imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
-                        sizes="(max-width: 768px) 100vw, 400px"
-                      />
-                    )}
-                    <button
-                      onClick={() => setFormData({ ...formData, imageUrl: '' })}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  {/* Image Fit Controls */}
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Display Mode:</span>
-                    <div className="flex bg-gray-100 rounded-lg p-1">
-                      <button
-                        onClick={() => setImageFit('contain')}
-                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                          imageFit === 'contain'
-                            ? 'bg-blue-500 text-white'
-                            : 'text-gray-600 hover:text-gray-800'
-                        }`}
-                      >
-                        🔲 Fit All
-                      </button>
-                      <button
-                        onClick={() => setImageFit('cover')}
-                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                          imageFit === 'cover'
-                            ? 'bg-blue-500 text-white'
-                            : 'text-gray-600 hover:text-gray-800'
-                        }`}
-                      >
-                        ✂️ Fill Frame
-                      </button>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-gray-500">
-                    {imageFit === 'contain'
-                      ? 'Gambar akan ditampilkan utuh tanpa terpotong'
-                      : 'Gambar akan mengisi frame penuh (mungkin terpotong)'
-                    }
-                  </p>
-                </div>
-              ) : (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600 mb-2">Upload gambar utama</p>
-                  <p className="text-xs text-gray-500 mb-3">
-                    Format: JPG, PNG, WebP, GIF • Maksimal: 2MB
-                  </p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={imageUploading}
-                    className="hidden"
-                    id="image-upload"
-                  />
-                  <label
-                    htmlFor="image-upload"
-                    className="cursor-pointer inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    {imageUploading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                        Uploading...
-                      </>
-                    ) : (
-                      'Pilih File'
-                    )}
-                  </label>
-                </div>
-              )}
+              <ImageUploadWithCompression
+                onImageSelect={(dataUrl) => {
+                  setFormData({ ...formData, imageUrl: dataUrl });
+                }}
+                imageType="featured"
+                currentImage={formData.imageUrl}
+              />
             </CardContent>
           </Card>
 

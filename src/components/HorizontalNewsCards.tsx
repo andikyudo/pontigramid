@@ -35,6 +35,7 @@ export default function HorizontalNewsCards() {
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   const { ref, inView } = useInView({
     triggerOnce: true,
@@ -46,6 +47,10 @@ export default function HorizontalNewsCards() {
       fetchNews();
     }
   }, [inView]);
+
+  const handleImageError = (slug: string) => {
+    setImageErrors(prev => ({ ...prev, [slug]: true }));
+  };
 
   const fetchNews = async (page = 1) => {
     try {
@@ -156,14 +161,25 @@ export default function HorizontalNewsCards() {
                     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                       {/* Image */}
                       <div className="relative h-32 overflow-hidden">
-                        {item.imageUrl ? (
-                          <Image
-                            src={item.imageUrl}
-                            alt={item.title}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                            sizes="288px"
-                          />
+                        {item.imageUrl && !imageErrors[item.slug] ? (
+                          item.imageUrl.startsWith('data:') ? (
+                            <img
+                              src={item.imageUrl}
+                              alt={item.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              onError={() => handleImageError(item.slug)}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <Image
+                              src={item.imageUrl}
+                              alt={item.title}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              sizes="288px"
+                              onError={() => handleImageError(item.slug)}
+                            />
+                          )
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                             <div className="text-gray-400">
@@ -217,14 +233,25 @@ export default function HorizontalNewsCards() {
                   <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                     {/* Image */}
                     <div className="relative h-40 overflow-hidden">
-                      {item.imageUrl ? (
-                        <Image
-                          src={item.imageUrl}
-                          alt={item.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          sizes="(max-width: 768px) 50vw, 25vw"
-                        />
+                      {item.imageUrl && !imageErrors[item.slug] ? (
+                        item.imageUrl.startsWith('data:') ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={() => handleImageError(item.slug)}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.title}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            sizes="(max-width: 768px) 50vw, 25vw"
+                            onError={() => handleImageError(item.slug)}
+                          />
+                        )
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                           <div className="text-gray-400">

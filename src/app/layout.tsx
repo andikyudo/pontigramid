@@ -11,23 +11,23 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "PontigramID - Portal Berita Terpercaya",
+  title: "Pontigram - Portal Berita Terpercaya",
   description: "Portal berita terpercaya untuk informasi terkini dari berbagai kategori. Dapatkan berita politik, ekonomi, olahraga, teknologi, dan lainnya.",
-  keywords: ["berita", "news", "portal berita", "pontigramid", "informasi", "terkini"],
-  authors: [{ name: "PontigramID" }],
-  creator: "PontigramID",
-  publisher: "PontigramID",
+  keywords: ["berita", "news", "portal berita", "pontigram", "informasi", "terkini"],
+  authors: [{ name: "Pontigram" }],
+  creator: "Pontigram",
+  publisher: "Pontigram",
   openGraph: {
     type: "website",
     locale: "id_ID",
-    url: "https://pontigramid.com",
-    title: "PontigramID - Portal Berita Terpercaya",
+    url: "https://www.pontigram.id",
+    title: "Pontigram - Portal Berita Terpercaya",
     description: "Portal berita terpercaya untuk informasi terkini dari berbagai kategori.",
-    siteName: "PontigramID",
+    siteName: "Pontigram",
   },
   twitter: {
     card: "summary_large_image",
-    title: "PontigramID - Portal Berita Terpercaya",
+    title: "Pontigram - Portal Berita Terpercaya",
     description: "Portal berita terpercaya untuk informasi terkini dari berbagai kategori.",
   },
   robots: {

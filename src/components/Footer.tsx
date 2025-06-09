@@ -7,12 +7,21 @@ import {
   Mail,
   Phone,
   MapPin,
-  Facebook,
-  Twitter,
-  Instagram,
-  Youtube,
   ExternalLink
 } from 'lucide-react';
+
+// Custom Social Media Icons
+const FacebookIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+  </svg>
+);
+
+const InstagramIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M12.017 0C8.396 0 7.989.013 7.041.048 6.094.082 5.52.204 5.02.43a5.105 5.105 0 00-1.852 1.207 5.105 5.105 0 00-1.207 1.852C1.734 4.02 1.612 4.594 1.578 5.541 1.544 6.489 1.53 6.896 1.53 10.517s.013 4.028.048 4.976c.034.947.156 1.521.382 2.021a5.105 5.105 0 001.207 1.852 5.105 5.105 0 001.852 1.207c.5.226 1.074.348 2.021.382.948.035 1.355.048 4.976.048s4.028-.013 4.976-.048c.947-.034 1.521-.156 2.021-.382a5.105 5.105 0 001.852-1.207 5.105 5.105 0 001.207-1.852c.226-.5.348-1.074.382-2.021.035-.948.048-1.355.048-4.976s-.013-4.028-.048-4.976c-.034-.947-.156-1.521-.382-2.021a5.105 5.105 0 00-1.207-1.852A5.105 5.105 0 0018.994.43c-.5-.226-1.074-.348-2.021-.382C16.025.013 15.618 0 12.017 0zM12.017 2.17c3.557 0 3.97.013 4.897.048.847.038 1.306.177 1.612.295.405.157.694.345.998.649.304.304.492.593.649.998.118.306.257.765.295 1.612.035.927.048 1.34.048 4.897s-.013 3.97-.048 4.897c-.038.847-.177 1.306-.295 1.612-.157.405-.345.694-.649.998-.304.304-.593.492-.998.649-.306.118-.765.257-1.612.295-.927.035-1.34.048-4.897.048s-3.97-.013-4.897-.048c-.847-.038-1.306-.177-1.612-.295a2.678 2.678 0 01-.998-.649 2.678 2.678 0 01-.649-.998c-.118-.306-.257-.765-.295-1.612-.035-.927-.048-1.34-.048-4.897s.013-3.97.048-4.897c.038-.847.177-1.306.295-1.612.157-.405.345-.694.649-.998.304-.304.593-.492.998-.649.306-.118.765-.257 1.612-.295.927-.035 1.34-.048 4.897-.048zM12.017 5.838a4.679 4.679 0 100 9.358 4.679 4.679 0 000-9.358zm0 7.718a3.04 3.04 0 110-6.078 3.04 3.04 0 010 6.078zM18.846 5.594a1.093 1.093 0 11-2.186 0 1.093 1.093 0 012.186 0z"/>
+  </svg>
+);
 
 // TypeScript interfaces
 interface FooterLink {
@@ -86,27 +95,15 @@ const defaultFooterLinks = {
 const defaultSocialLinks = [
   {
     name: 'Facebook',
-    href: 'https://facebook.com/pontigramid',
+    href: 'https://facebook.com/pontigram',
     icon: 'Facebook',
     color: 'hover:text-blue-600'
   },
   {
-    name: 'Twitter',
-    href: 'https://twitter.com/pontigramid',
-    icon: 'Twitter',
-    color: 'hover:text-blue-400'
-  },
-  {
     name: 'Instagram',
-    href: 'https://instagram.com/pontigramid',
+    href: 'https://instagram.com/pontigram',
     icon: 'Instagram',
     color: 'hover:text-pink-600'
-  },
-  {
-    name: 'YouTube',
-    href: 'https://youtube.com/pontigramid',
-    icon: 'Youtube',
-    color: 'hover:text-red-600'
   }
 ];
 
@@ -142,7 +139,7 @@ export default function Footer() {
   const footerLinks = footerData?.footerLinks || defaultFooterLinks;
   const socialLinks = footerData?.socialLinks || defaultSocialLinks;
   const contactInfo = footerData?.contactInfo || {
-    email: 'info@pontigramid.com',
+    email: 'info@pontigram.com',
     phone: '+62 21-1234-5678',
     address: {
       street: 'Jl. Sudirman No. 123',
@@ -152,7 +149,7 @@ export default function Footer() {
     }
   };
   const companyInfo = footerData?.companyInfo || {
-    name: 'PontigramID',
+    name: 'Pontigram',
     description: 'Portal berita terpercaya yang menyajikan informasi terkini dan akurat dari berbagai kategori.',
     copyright: 'All rights reserved. Made with ❤️ in Indonesia'
   };
@@ -280,22 +277,37 @@ export default function Footer() {
 
           {/* Social Media Column */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <h3 className="text-base sm:text-lg font-semibold mb-4 sm:mb-6">Ikuti Kami</h3>
+            <h3 className="text-base sm:text-lg font-semibold mb-4 sm:mb-6 flex items-center">
+              <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+                Ikuti Kami
+              </span>
+              <div className="ml-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+            </h3>
 
-            {/* Social Media Icons */}
-            <div className="flex space-x-3 sm:space-x-4 mb-6 sm:mb-8">
+            {/* Social Media Icons - Enhanced */}
+            <div className="flex flex-wrap gap-3 sm:gap-4 mb-6 sm:mb-8">
               {socialLinks.map((social: SocialLink) => {
                 // Map icon names to components
                 const getIconComponent = (iconName: string) => {
                   switch (iconName) {
-                    case 'Facebook': return Facebook;
-                    case 'Twitter': return Twitter;
-                    case 'Instagram': return Instagram;
-                    case 'Youtube': return Youtube;
+                    case 'Facebook': return FacebookIcon;
+                    case 'Instagram': return InstagramIcon;
                     default: return ExternalLink;
                   }
                 };
                 const IconComponent = getIconComponent(social.icon);
+
+                // Enhanced styling per platform
+                const getPlatformStyle = (iconName: string) => {
+                  switch (iconName) {
+                    case 'Facebook':
+                      return 'bg-blue-600 hover:bg-blue-700 hover:shadow-blue-500/50';
+                    case 'Instagram':
+                      return 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 hover:shadow-pink-500/50';
+                    default:
+                      return 'bg-gray-600 hover:bg-gray-700';
+                  }
+                };
 
                 return (
                   <a
@@ -303,13 +315,24 @@ export default function Footer() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`bg-gray-800 p-2 sm:p-3 rounded-full transition-all duration-300 transform hover:scale-110 ${social.color} hover:bg-gray-700`}
+                    className={`${getPlatformStyle(social.icon)} p-3 sm:p-4 rounded-xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 hover:shadow-lg group`}
                     aria-label={`Follow us on ${social.name}`}
+                    title={`Follow us on ${social.name}`}
                   >
-                    <IconComponent className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <IconComponent className="h-5 w-5 sm:h-6 sm:w-6 text-white group-hover:scale-110 transition-transform duration-300" />
                   </a>
                 );
               })}
+            </div>
+
+            {/* Follow CTA */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 rounded-lg mb-6">
+              <p className="text-white text-sm font-medium mb-2">
+                🔔 Jangan lewatkan update terbaru!
+              </p>
+              <p className="text-blue-100 text-xs">
+                Follow media sosial kami untuk berita terkini dan konten eksklusif.
+              </p>
             </div>
 
             {/* Newsletter Signup - Only on larger screens */}

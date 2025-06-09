@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { TrendingUp, Calendar, User, Eye } from 'lucide-react';
 import { formatDateShort } from '@/lib/utils';
 import { useInView } from 'react-intersection-observer';
 import { useTrendingNews } from '@/hooks/useNews';
+import { TrendingNewsSkeleton } from '@/components/LoadingSkeleton';
 
 interface NewsItem {
   _id: string;
@@ -31,6 +33,8 @@ const categoryColors: { [key: string]: string } = {
 };
 
 export default function TrendingNews() {
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
   const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
@@ -39,22 +43,11 @@ export default function TrendingNews() {
   // Use React Query hook with conditional fetching
   const { data: trendingNews = [], isLoading: loading, isError, error } = useTrendingNews(6);
 
-  const LoadingSkeleton = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {[...Array(6)].map((_, index) => (
-        <div key={index} className="animate-pulse">
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="h-48 bg-gray-200"></div>
-            <div className="p-4">
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  const handleImageError = (slug: string) => {
+    setImageErrors(prev => ({ ...prev, [slug]: true }));
+  };
+
+
 
   return (
     <section ref={ref} className="py-8 sm:py-12 bg-gray-50">
@@ -75,7 +68,7 @@ export default function TrendingNews() {
 
         {/* Content */}
         {loading ? (
-          <LoadingSkeleton />
+          <TrendingNewsSkeleton />
         ) : isError ? (
           <div className="text-center py-12">
             <div className="text-red-500 mb-4">
@@ -103,14 +96,29 @@ export default function TrendingNews() {
                           </div>
                         </div>
                         <Link href={`/berita/${news.slug}`}>
-                          {news.imageUrl ? (
-                            <Image
-                              src={news.imageUrl}
-                              alt={news.title}
-                              fill
-                              className="object-cover rounded-l-lg"
-                              sizes="96px"
-                            />
+                          {news.imageUrl && !imageErrors[news.slug] ? (
+                            news.imageUrl.startsWith('data:') ? (
+                              <img
+                                src={news.imageUrl}
+                                alt={news.title}
+                                className="w-full h-full object-cover rounded-l-lg"
+                                onError={() => handleImageError(news.slug)}
+                                loading="lazy"
+                              />
+                            ) : (
+                              <Image
+                                src={news.imageUrl}
+                                alt={news.title}
+                                fill
+                                className="object-cover rounded-l-lg"
+                                sizes="96px"
+                                onError={(e) => {
+                                  console.error('Image load error:', e);
+                                  handleImageError(news.slug);
+                                }}
+                                priority={false}
+                              />
+                            )
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 rounded-l-lg flex items-center justify-center">
                               <div className="text-gray-400">
@@ -196,14 +204,29 @@ export default function TrendingNews() {
                   {/* Image */}
                   <Link href={`/berita/${news.slug}`}>
                     <div className="relative h-48 overflow-hidden">
-                      {news.imageUrl ? (
-                        <Image
-                          src={news.imageUrl}
-                          alt={news.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
+                      {news.imageUrl && !imageErrors[news.slug] ? (
+                        news.imageUrl.startsWith('data:') ? (
+                          <img
+                            src={news.imageUrl}
+                            alt={news.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={() => handleImageError(news.slug)}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <Image
+                            src={news.imageUrl}
+                            alt={news.title}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            onError={(e) => {
+                              console.error('Image load error:', e);
+                              handleImageError(news.slug);
+                            }}
+                            priority={index < 2}
+                          />
+                        )
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                           <div className="text-gray-400 text-center">
@@ -269,9 +292,9 @@ export default function TrendingNews() {
         {/* View All Button */}
         {!loading && !error && (
           <div className="text-center mt-10">
-            <Link 
-              href="/"
-              className="inline-flex items-center px-6 py-3 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors duration-300"
+            <Link
+              href="/?trending=true"
+              className="inline-flex items-center px-6 py-3 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
             >
               <TrendingUp className="w-5 h-5 mr-2" />
               Lihat Semua Berita Trending

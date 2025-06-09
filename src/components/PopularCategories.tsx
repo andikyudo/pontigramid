@@ -11,9 +11,11 @@ import {
   Heart,
   GraduationCap,
   Globe,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
+import { useCategoryCounts } from '@/hooks/useNews';
 
 interface CategoryData {
   id: string;
@@ -101,46 +103,34 @@ const categoriesConfig: CategoryData[] = [
 ];
 
 export default function PopularCategories() {
-  const [categories, setCategories] = useState<CategoryData[]>(categoriesConfig);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
   const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
   });
 
-  useEffect(() => {
-    if (inView) {
-      fetchCategoryCounts();
-    }
-  }, [inView]);
+  // Use React Query for caching
+  const { data: categories = [], isLoading: loading, isError, error } = useCategoryCounts();
 
-  const fetchCategoryCounts = async () => {
-    try {
-      // Fetch news count for each category
-      const promises = categoriesConfig.map(async (category) => {
-        const response = await fetch(`/api/news?category=${category.id}&published=true&limit=1`);
-        const data = await response.json();
-        return {
-          ...category,
-          count: data.pagination?.total || 0
-        };
-      });
-
-      const categoriesWithCounts = await Promise.all(promises);
-      
-      // Sort by count (most popular first)
-      categoriesWithCounts.sort((a, b) => b.count - a.count);
-      
-      setCategories(categoriesWithCounts);
-    } catch (error) {
-      console.error('Error fetching category counts:', error);
-      setError('Gagal memuat data kategori');
-    } finally {
-      setLoading(false);
-    }
+  // Map icon strings to actual icon components
+  const iconMap: Record<string, any> = {
+    Users: Briefcase,
+    TrendingUp: TrendingUp,
+    Trophy: Gamepad2,
+    Smartphone: Laptop,
+    Music: Music,
+    Heart: Heart,
+    BookOpen: GraduationCap,
+    Globe: Globe
   };
+
+  // Transform categories to include proper icon components
+  const categoriesWithIcons = categories.map(category => ({
+    ...category,
+    icon: iconMap[category.icon] || Globe,
+    description: categoriesConfig.find(c => c.id === category.id)?.description || '',
+    bgColor: categoriesConfig.find(c => c.id === category.id)?.bgColor || 'bg-gray-50 hover:bg-gray-100',
+    color: categoriesConfig.find(c => c.id === category.id)?.color || 'text-gray-600'
+  }));
 
   const LoadingSkeleton = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -174,19 +164,19 @@ export default function PopularCategories() {
         {/* Content */}
         {loading ? (
           <LoadingSkeleton />
-        ) : error ? (
+        ) : isError ? (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <Globe className="h-16 w-16 mx-auto opacity-50" />
             </div>
-            <p className="text-gray-600 text-lg">{error}</p>
+            <p className="text-gray-600 text-lg">{error?.message || 'Gagal memuat data kategori'}</p>
           </div>
         ) : (
           <>
             {/* Mobile: Horizontal scroll layout */}
             <div className="block sm:hidden">
               <div className="flex overflow-x-auto pb-4 space-x-4 scrollbar-hide">
-                {categories.map((category, index) => {
+                {categoriesWithIcons.map((category, index) => {
                   const IconComponent = category.icon;
                   return (
                     <Link
@@ -232,7 +222,7 @@ export default function PopularCategories() {
 
             {/* Desktop: Grid layout */}
             <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {categories.map((category, index) => {
+              {categoriesWithIcons.map((category, index) => {
               const IconComponent = category.icon;
               return (
                 <Link

@@ -66,17 +66,22 @@ export const useNews = (
 export const useInfiniteNews = (
   category: string = 'all',
   search: string = '',
-  limit: number = 12
+  limit: number = 12,
+  trending: boolean = false
 ) => {
   return useInfiniteQuery({
-    queryKey: ['news-infinite', category, search, limit],
+    queryKey: ['news-infinite', category, search, limit, trending],
     queryFn: async ({ pageParam = 1 }): Promise<NewsResponse> => {
       const params = new URLSearchParams({
         page: pageParam.toString(),
         limit: limit.toString(),
         published: 'true',
-        sort: 'createdAt'
+        sort: trending ? 'views' : 'createdAt'
       });
+
+      if (trending) {
+        params.append('trending', 'true');
+      }
 
       if (category !== 'all') {
         params.append('category', category);
@@ -191,5 +196,85 @@ export const useBreakingNews = (limit: number = 5) => {
     gcTime: 15 * 60 * 1000, // 15 minutes in cache
     refetchOnMount: false, // Don't refetch on component mount if data is fresh
     refetchOnWindowFocus: false, // Don't refetch on window focus
+  });
+};
+
+
+
+// Fetch category counts for popular categories
+export const useCategoryCounts = () => {
+  return useQuery({
+    queryKey: ['category-counts'],
+    queryFn: async () => {
+      const categoriesConfig = [
+        { id: 'politik', name: 'Politik', icon: 'Users', bgColor: 'bg-blue-50', textColor: 'text-blue-600', borderColor: 'border-blue-200' },
+        { id: 'ekonomi', name: 'Ekonomi', icon: 'TrendingUp', bgColor: 'bg-green-50', textColor: 'text-green-600', borderColor: 'border-green-200' },
+        { id: 'olahraga', name: 'Olahraga', icon: 'Trophy', bgColor: 'bg-orange-50', textColor: 'text-orange-600', borderColor: 'border-orange-200' },
+        { id: 'teknologi', name: 'Teknologi', icon: 'Smartphone', bgColor: 'bg-purple-50', textColor: 'text-purple-600', borderColor: 'border-purple-200' },
+        { id: 'hiburan', name: 'Hiburan', icon: 'Music', bgColor: 'bg-pink-50', textColor: 'text-pink-600', borderColor: 'border-pink-200' },
+        { id: 'kesehatan', name: 'Kesehatan', icon: 'Heart', bgColor: 'bg-red-50', textColor: 'text-red-600', borderColor: 'border-red-200' },
+        { id: 'pendidikan', name: 'Pendidikan', icon: 'BookOpen', bgColor: 'bg-indigo-50', textColor: 'text-indigo-600', borderColor: 'border-indigo-200' },
+        { id: 'umum', name: 'Umum', icon: 'Globe', bgColor: 'bg-gray-50', textColor: 'text-gray-600', borderColor: 'border-gray-200' }
+      ];
+
+      // Fetch news count for each category in parallel
+      const promises = categoriesConfig.map(async (category) => {
+        try {
+          const response = await fetch(`/api/news?category=${category.id}&published=true&limit=1`);
+          const data = await response.json();
+          return {
+            ...category,
+            count: data.pagination?.total || 0
+          };
+        } catch (error) {
+          console.error(`Error fetching count for ${category.id}:`, error);
+          return {
+            ...category,
+            count: 0
+          };
+        }
+      });
+
+      const categoriesWithCounts = await Promise.all(promises);
+
+      // Sort by count (most popular first)
+      categoriesWithCounts.sort((a, b) => b.count - a.count);
+
+      return categoriesWithCounts;
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes for category counts
+    gcTime: 30 * 60 * 1000, // 30 minutes in cache
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+};
+
+// Fetch related news based on category and exclude current article
+export const useRelatedNews = (category: string, currentSlug: string, limit: number = 6) => {
+  return useQuery({
+    queryKey: ['related-news', category, currentSlug, limit],
+    queryFn: async (): Promise<NewsItem[]> => {
+      const response = await fetch(`/api/news?category=${category}&published=true&limit=${limit + 1}&sort=createdAt`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch related news');
+      }
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error('Failed to fetch related news');
+      }
+
+      // Filter out current article and limit results
+      const relatedNews = data.news
+        .filter((news: NewsItem) => news.slug !== currentSlug)
+        .slice(0, limit);
+
+      return relatedNews;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes in cache
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    enabled: !!category && !!currentSlug, // Only fetch when we have category and slug
   });
 };

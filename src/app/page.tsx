@@ -42,6 +42,7 @@ function HomeContent() {
 
   const [currentCategory, setCurrentCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showTrending, setShowTrending] = useState(false);
 
   // Use React Query for infinite loading
   const {
@@ -52,7 +53,7 @@ function HomeContent() {
     isLoading,
     isError,
     error
-  } = useInfiniteNews(currentCategory, searchQuery, 12);
+  } = useInfiniteNews(currentCategory, searchQuery, 12, showTrending);
 
   // Flatten the paginated data
   const news = data?.pages.flatMap(page => page.news) || [];
@@ -61,6 +62,7 @@ function HomeContent() {
   useEffect(() => {
     const categoryParam = searchParams.get('category');
     const searchParam = searchParams.get('search');
+    const trendingParam = searchParams.get('trending');
 
     if (categoryParam && categoryParam !== currentCategory) {
       setCurrentCategory(categoryParam);
@@ -69,7 +71,13 @@ function HomeContent() {
     if (searchParam && searchParam !== searchQuery) {
       setSearchQuery(searchParam);
     }
-  }, [searchParams, currentCategory, searchQuery]);
+
+    if (trendingParam === 'true' && !showTrending) {
+      setShowTrending(true);
+    } else if (trendingParam !== 'true' && showTrending) {
+      setShowTrending(false);
+    }
+  }, [searchParams, currentCategory, searchQuery, showTrending]);
 
 
 
@@ -123,10 +131,13 @@ function HomeContent() {
         {/* Hero Section - Simplified for mobile */}
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 px-4">
-            Portal Berita Terpercaya
+            {showTrending ? 'Berita Trending' : 'Portal Berita Terpercaya'}
           </h1>
           <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
-            Dapatkan informasi terkini dan terpercaya dari berbagai kategori berita
+            {showTrending
+              ? 'Berita paling populer dan banyak dibaca hari ini'
+              : 'Dapatkan informasi terkini dan terpercaya dari berbagai kategori berita'
+            }
           </p>
         </div>
 
@@ -179,10 +190,14 @@ function HomeContent() {
         )}
       </main>
 
-      {/* Additional Sections */}
-      <TrendingNews />
-      <HorizontalNewsCards />
-      <PopularCategories />
+      {/* Additional Sections - Hide when showing trending */}
+      {!showTrending && (
+        <>
+          <TrendingNews />
+          <HorizontalNewsCards />
+          <PopularCategories />
+        </>
+      )}
 
       {/* Footer */}
       <Footer />
