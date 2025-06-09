@@ -2,6 +2,36 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import Event from '@/models/Event';
 
+// TypeScript interface for MongoDB event document
+interface EventDocument {
+  _id: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  date: Date;
+  time: string;
+  location: string;
+  category: string;
+  organizer: string;
+  slug: string;
+  isFeatured: boolean;
+  isActive: boolean;
+  registrationRequired: boolean;
+  maxParticipants?: number;
+  registrationDeadline?: Date;
+  contactEmail?: string;
+  contactPhone?: string;
+  contactWebsite?: string;
+  tags?: string[];
+  price?: {
+    amount: number;
+    currency: string;
+    isFree: boolean;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Public API endpoint for single event by slug (no authentication required)
 export async function GET(
   request: NextRequest,
@@ -28,7 +58,7 @@ export async function GET(
     const event = await Event.findOne({
       slug,
       isActive: true
-    }).lean() as any;
+    }).lean() as unknown as EventDocument;
 
     if (!event) {
       console.log('Public Event Detail API: Event not found for slug:', slug);
@@ -50,7 +80,7 @@ export async function GET(
     .sort({ date: 1 })
     .limit(3)
     .select('title imageUrl date time location slug')
-    .lean() as any[];
+    .lean() as unknown as EventDocument[];
 
     console.log('Public Event Detail API: Found', relatedEvents.length, 'related events');
 

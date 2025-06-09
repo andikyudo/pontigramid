@@ -2,6 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import Event from '@/models/Event';
 
+// TypeScript interface for MongoDB event document
+interface EventDocument {
+  _id: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  date: Date;
+  time: string;
+  location: string;
+  category: string;
+  organizer: string;
+  slug: string;
+  isFeatured: boolean;
+  isActive: boolean;
+  price?: {
+    amount: number;
+    currency: string;
+    isFree: boolean;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Public API endpoint for events (no authentication required)
 export async function GET(request: NextRequest) {
   try {
@@ -33,7 +56,7 @@ export async function GET(request: NextRequest) {
     const events = await Event.find(query)
       .sort({ date: 1, createdAt: -1 })
       .limit(limit)
-      .lean() as any[];
+      .lean() as unknown as EventDocument[];
 
     console.log('Public Events API: Found', events.length, 'events');
 
