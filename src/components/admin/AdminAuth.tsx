@@ -20,24 +20,20 @@ export default function AdminAuth({ children }: AdminAuthProps) {
 
   const checkAuthentication = async () => {
     try {
-      // First check if we have any client-side session indicators
-      const hasClientSession = 
-        sessionStorage.getItem('admin-user') || 
-        localStorage.getItem('admin_token');
-
-      if (hasClientSession) {
-        setIsAuthenticated(true);
-        setIsLoading(false);
-        return;
-      }
-
       // Check server-side session by making a test API call
+      // This is the only reliable way to check authentication
       const response = await fetch('/api/admin/news?limit=1');
-      
+
       if (response.ok) {
         setIsAuthenticated(true);
+        // Only set client-side storage AFTER successful server verification
+        sessionStorage.setItem('admin-verified', 'true');
       } else if (response.status === 401) {
         setIsAuthenticated(false);
+        // Clear any stale client-side data
+        sessionStorage.removeItem('admin-user');
+        sessionStorage.removeItem('admin-verified');
+        localStorage.removeItem('admin_token');
       } else {
         setError('Authentication check failed');
         setIsAuthenticated(false);
@@ -79,10 +75,10 @@ export default function AdminAuth({ children }: AdminAuthProps) {
       const loginData = await loginResponse.json();
 
       if (loginData.success) {
-        // Store user info in session storage
+        // Store minimal verification flag only after successful login
         if (loginData.user) {
           sessionStorage.setItem('admin-user', JSON.stringify(loginData.user));
-          localStorage.setItem('admin_token', 'authenticated-' + Date.now());
+          sessionStorage.setItem('admin-verified', 'true');
         }
 
         setIsAuthenticated(true);

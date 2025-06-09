@@ -19,6 +19,8 @@ export async function middleware(request: NextRequest) {
     '/api/advertisements',
     '/api/track-visitor',
     '/api/test',
+    // Public events API (no authentication required)
+    '/api/public-events',
     // Test routes for debugging
     '/admin/test-news',
     '/admin/test-api',
@@ -38,6 +40,7 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith('/api/team') ||
       pathname.startsWith('/api/advertisements') ||
       pathname.startsWith('/api/track-visitor') ||
+      pathname.startsWith('/api/public-events') ||
       pathname.startsWith('/api/test')) {
     return NextResponse.next();
   }
@@ -47,11 +50,7 @@ export async function middleware(request: NextRequest) {
     try {
       const session = await getSession();
 
-      // Temporary bypass for main admin page and dashboard for testing
-      if (pathname === '/admin' || pathname === '/admin/dashboard' || pathname === '/admin/news' || pathname === '/admin/footer' || pathname === '/admin/team' || pathname === '/admin/advertisements' || pathname === '/admin/events') {
-        console.log('Middleware: Bypassing authentication for testing:', pathname);
-        return NextResponse.next();
-      }
+      // Remove temporary bypass - proper authentication required
 
       if (!session) {
         // Redirect to login for admin pages
@@ -63,11 +62,7 @@ export async function middleware(request: NextRequest) {
 
         // Return 401 for API routes (except test routes)
         if (pathname.startsWith('/api/admin/')) {
-          // Temporary bypass for admin API testing
-          if (pathname === '/api/admin/news' || pathname === '/api/admin/footer' || pathname === '/api/admin/team' || pathname === '/api/admin/advertisements' || pathname === '/api/admin/events') {
-            console.log('Middleware: Bypassing API authentication for testing:', pathname);
-            return NextResponse.next();
-          }
+          // Remove temporary bypass - proper authentication required
 
           return NextResponse.json(
             { success: false, error: 'Authentication required' },
