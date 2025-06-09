@@ -45,65 +45,12 @@ export default function EventRunningTextOptimized({
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Demo events that are always available
-  const demoEvents = [
-    {
-      _id: 'demo-1',
-      title: 'Konferensi Teknologi Pontianak 2024',
-      description: 'Event teknologi terbesar di Kalimantan Barat',
-      date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      time: '09:00',
-      location: 'Hotel Mercure Pontianak',
-      category: 'teknologi',
-      organizer: 'Tech Community Pontianak',
-      slug: 'konferensi-teknologi-pontianak-2024',
-      isFeatured: true,
-      price: { amount: 0, currency: 'IDR', isFree: true }
-    },
-    {
-      _id: 'demo-2',
-      title: 'Festival Budaya Dayak',
-      description: 'Perayaan budaya tradisional Kalimantan Barat',
-      date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-      time: '16:00',
-      location: 'Taman Alun Kapuas',
-      category: 'budaya',
-      organizer: 'Dinas Kebudayaan Pontianak',
-      slug: 'festival-budaya-dayak',
-      isFeatured: true,
-      price: { amount: 0, currency: 'IDR', isFree: true }
-    },
-    {
-      _id: 'demo-3',
-      title: 'Workshop Digital Marketing',
-      description: 'Belajar strategi pemasaran digital untuk UMKM',
-      date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
-      time: '13:00',
-      location: 'Gedung DPRD Pontianak',
-      category: 'bisnis',
-      organizer: 'Kamar Dagang Pontianak',
-      slug: 'workshop-digital-marketing',
-      isFeatured: false,
-      price: { amount: 150000, currency: 'IDR', isFree: false }
-    },
-    {
-      _id: 'demo-4',
-      title: 'Seminar Kesehatan Mental Remaja',
-      description: 'Edukasi kesehatan mental untuk remaja',
-      date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-      time: '14:00',
-      location: 'Auditorium UNTAN',
-      category: 'kesehatan',
-      organizer: 'Fakultas Kedokteran UNTAN',
-      slug: 'seminar-kesehatan-mental-remaja',
-      isFeatured: true,
-      price: { amount: 0, currency: 'IDR', isFree: true }
-    }
-  ];
+  // State for loading and error handling
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     if (enabled) {
-      setEvents(demoEvents);
       fetchEvents();
     }
   }, [enabled]);
@@ -125,15 +72,46 @@ export default function EventRunningTextOptimized({
 
   const fetchEvents = async () => {
     try {
+      setIsLoading(true);
+      setHasError(false);
+
+      console.log('EventRunningTextOptimized: Fetching events from /api/events...');
       const response = await fetch('/api/events?featured=true&upcoming=true&limit=10');
+      console.log('EventRunningTextOptimized: Response status:', response.status);
+      console.log('EventRunningTextOptimized: Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (response.ok) {
         const data = await response.json();
-        if (data.success && data.data && Array.isArray(data.data) && data.data.length > 0) {
-          setEvents([...data.data, ...demoEvents]);
+        console.log('EventRunningTextOptimized: API Response:', data);
+
+        if (data.success && data.data && Array.isArray(data.data)) {
+          console.log('EventRunningTextOptimized: Found', data.data.length, 'real events from database');
+          setEvents(data.data); // Only use real events from database
+          setHasError(false);
+        } else {
+          console.log('EventRunningTextOptimized: No real events found in database');
+          console.log('EventRunningTextOptimized: Data structure:', {
+            success: data.success,
+            hasData: !!data.data,
+            isArray: Array.isArray(data.data),
+            length: data.data?.length
+          });
+          setEvents([]); // Set empty array if no events
+          setHasError(false);
         }
+      } else {
+        console.error('EventRunningTextOptimized: API request failed with status:', response.status);
+        const errorText = await response.text();
+        console.error('EventRunningTextOptimized: Error response:', errorText.substring(0, 500));
+        setEvents([]);
+        setHasError(true);
       }
     } catch (error) {
-      console.error('Error fetching events:', error);
+      console.error('EventRunningTextOptimized: Error fetching events:', error);
+      setEvents([]);
+      setHasError(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -223,8 +201,72 @@ export default function EventRunningTextOptimized({
     return colors[category] || colors.lainnya;
   };
 
-  if (!enabled || events.length === 0) {
+  // Don't render if not enabled
+  if (!enabled) {
     return null;
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className={`relative overflow-hidden bg-gradient-to-r from-slate-800 via-slate-900 to-black backdrop-blur-sm border-b border-slate-600/50 ${className}`}>
+        <div className="flex items-center px-4 py-3 sm:py-4">
+          <div className="flex-shrink-0 mr-3 sm:mr-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-slate-700 animate-pulse"></div>
+          </div>
+          <div className="flex-1">
+            <div className="h-4 bg-slate-700 rounded animate-pulse mb-2"></div>
+            <div className="h-3 bg-slate-700 rounded animate-pulse w-3/4"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (hasError) {
+    return (
+      <div className={`relative overflow-hidden bg-gradient-to-r from-red-800 via-red-900 to-black backdrop-blur-sm border-b border-red-600/50 ${className}`}>
+        <div className="flex items-center px-4 py-3 sm:py-4">
+          <div className="flex-shrink-0 mr-3 sm:mr-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-red-700 flex items-center justify-center">
+              <span className="text-white text-lg">⚠️</span>
+            </div>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-white font-semibold text-sm sm:text-base mb-1">
+              Gagal Memuat Event
+            </h3>
+            <p className="text-red-200 text-xs sm:text-sm">
+              Terjadi kesalahan saat memuat data event. Silakan refresh halaman.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state when no events available
+  if (events.length === 0) {
+    return (
+      <div className={`relative overflow-hidden bg-gradient-to-r from-slate-800 via-slate-900 to-black backdrop-blur-sm border-b border-slate-600/50 ${className}`}>
+        <div className="flex items-center px-4 py-3 sm:py-4">
+          <div className="flex-shrink-0 mr-3 sm:mr-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-slate-700 flex items-center justify-center">
+              <span className="text-white text-lg">📅</span>
+            </div>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-white font-semibold text-sm sm:text-base mb-1">
+              Belum Ada Event
+            </h3>
+            <p className="text-gray-300 text-xs sm:text-sm">
+              Saat ini belum ada event yang tersedia. Pantau terus untuk update terbaru!
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const currentEvent = events[currentIndex];
