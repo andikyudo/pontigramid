@@ -1,0 +1,366 @@
+'use client';
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Calendar, Clock, MapPin, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+
+interface Event {
+  _id: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  date: string;
+  time: string;
+  location: string;
+  category: string;
+  organizer: string;
+  slug: string;
+  isFeatured: boolean;
+  price?: {
+    amount: number;
+    currency: string;
+    isFree: boolean;
+  };
+}
+
+interface EventRunningTextProps {
+  enabled?: boolean;
+  speed?: number;
+  pauseOnHover?: boolean;
+  className?: string;
+}
+
+export default function EventRunningTextOptimized({ 
+  enabled = true, 
+  speed = 5, 
+  pauseOnHover = true,
+  className = '' 
+}: EventRunningTextProps) {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isManualControl, setIsManualControl] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Demo events that are always available
+  const demoEvents = [
+    {
+      _id: 'demo-1',
+      title: 'Konferensi Teknologi Pontianak 2024',
+      description: 'Event teknologi terbesar di Kalimantan Barat',
+      date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '09:00',
+      location: 'Hotel Mercure Pontianak',
+      category: 'teknologi',
+      organizer: 'Tech Community Pontianak',
+      slug: 'konferensi-teknologi-pontianak-2024',
+      isFeatured: true,
+      price: { amount: 0, currency: 'IDR', isFree: true }
+    },
+    {
+      _id: 'demo-2',
+      title: 'Festival Budaya Dayak',
+      description: 'Perayaan budaya tradisional Kalimantan Barat',
+      date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '16:00',
+      location: 'Taman Alun Kapuas',
+      category: 'budaya',
+      organizer: 'Dinas Kebudayaan Pontianak',
+      slug: 'festival-budaya-dayak',
+      isFeatured: true,
+      price: { amount: 0, currency: 'IDR', isFree: true }
+    },
+    {
+      _id: 'demo-3',
+      title: 'Workshop Digital Marketing',
+      description: 'Belajar strategi pemasaran digital untuk UMKM',
+      date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '13:00',
+      location: 'Gedung DPRD Pontianak',
+      category: 'bisnis',
+      organizer: 'Kamar Dagang Pontianak',
+      slug: 'workshop-digital-marketing',
+      isFeatured: false,
+      price: { amount: 150000, currency: 'IDR', isFree: false }
+    },
+    {
+      _id: 'demo-4',
+      title: 'Seminar Kesehatan Mental Remaja',
+      description: 'Edukasi kesehatan mental untuk remaja',
+      date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '14:00',
+      location: 'Auditorium UNTAN',
+      category: 'kesehatan',
+      organizer: 'Fakultas Kedokteran UNTAN',
+      slug: 'seminar-kesehatan-mental-remaja',
+      isFeatured: true,
+      price: { amount: 0, currency: 'IDR', isFree: true }
+    }
+  ];
+
+  useEffect(() => {
+    if (enabled) {
+      setEvents(demoEvents);
+      fetchEvents();
+    }
+  }, [enabled]);
+
+  // Auto-scroll functionality
+  useEffect(() => {
+    if (!isManualControl && events.length > 1) {
+      autoScrollRef.current = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % events.length);
+      }, speed * 1000);
+    }
+
+    return () => {
+      if (autoScrollRef.current) {
+        clearInterval(autoScrollRef.current);
+      }
+    };
+  }, [isManualControl, events.length, speed]);
+
+  const fetchEvents = async () => {
+    try {
+      const response = await fetch('/api/events?featured=true&upcoming=true&limit=10');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data && Array.isArray(data.data) && data.data.length > 0) {
+          setEvents([...data.data, ...demoEvents]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+
+  // Touch handlers for swipe functionality
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe || isRightSwipe) {
+      setIsManualControl(true);
+      if (isLeftSwipe) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+      
+      setTimeout(() => setIsManualControl(false), 5000);
+    }
+  };
+
+  const nextSlide = useCallback(() => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % events.length);
+  }, [events.length]);
+
+  const prevSlide = useCallback(() => {
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + events.length) % events.length);
+  }, [events.length]);
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index);
+    setIsManualControl(true);
+    setTimeout(() => setIsManualControl(false), 5000);
+  };
+
+  const handleImageError = (eventId: string) => {
+    setImageErrors(prev => ({ ...prev, [eventId]: true }));
+  };
+
+  const formatEventDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short'
+    });
+  };
+
+  const getDaysUntilEvent = (dateString: string) => {
+    const eventDate = new Date(dateString);
+    const now = new Date();
+    const diffTime = eventDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Hari ini';
+    if (diffDays === 1) return 'Besok';
+    if (diffDays < 7) return `${diffDays} hari lagi`;
+    return `${Math.ceil(diffDays / 7)} minggu lagi`;
+  };
+
+  const getCategoryColor = (category: string) => {
+    const colors: { [key: string]: string } = {
+      teknologi: 'from-blue-500 to-cyan-500',
+      budaya: 'from-orange-500 to-yellow-500',
+      bisnis: 'from-green-500 to-emerald-500',
+      kesehatan: 'from-red-500 to-pink-500',
+      pendidikan: 'from-indigo-500 to-purple-500',
+      olahraga: 'from-red-600 to-orange-600',
+      hiburan: 'from-pink-500 to-purple-500',
+      pameran: 'from-amber-500 to-orange-500',
+      lainnya: 'from-gray-500 to-slate-500'
+    };
+    return colors[category] || colors.lainnya;
+  };
+
+  if (!enabled || events.length === 0) {
+    return null;
+  }
+
+  const currentEvent = events[currentIndex];
+
+  return (
+    <div className={`relative overflow-hidden bg-gradient-to-r from-slate-700/80 via-gray-700/80 to-slate-700/80 backdrop-blur-sm border-b border-gray-600/30 ${className}`}>
+      {/* Compact Mobile-Optimized Container */}
+      <div 
+        className="relative"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Event Content - Compact Design */}
+        <div className="flex items-center px-4 py-3 sm:py-4">
+          {/* Event Image - Smaller on Mobile */}
+          <div className="flex-shrink-0 mr-3 sm:mr-4">
+            <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden">
+              {currentEvent.imageUrl && !imageErrors[currentEvent._id] ? (
+                currentEvent.imageUrl.startsWith('data:') ? (
+                  <img
+                    src={currentEvent.imageUrl}
+                    alt={currentEvent.title}
+                    className="w-full h-full object-cover"
+                    onError={() => handleImageError(currentEvent._id)}
+                  />
+                ) : (
+                  <Image
+                    src={currentEvent.imageUrl}
+                    alt={currentEvent.title}
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                    onError={() => handleImageError(currentEvent._id)}
+                  />
+                )
+              ) : (
+                <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(currentEvent.category)} flex items-center justify-center`}>
+                  <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-white/80" />
+                </div>
+              )}
+              
+              {/* Featured Badge */}
+              {currentEvent.isFeatured && (
+                <div className="absolute -top-1 -right-1">
+                  <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Event Details - Responsive Text */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0 mr-2">
+                <h3 className="text-white font-semibold text-sm sm:text-base line-clamp-1 mb-1">
+                  {currentEvent.title}
+                </h3>
+                
+                <div className="flex items-center space-x-3 text-xs sm:text-sm text-gray-300">
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="w-3 h-3" />
+                    <span>{formatEventDate(currentEvent.date)}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Clock className="w-3 h-3" />
+                    <span>{currentEvent.time}</span>
+                  </div>
+                  <div className="hidden sm:flex items-center space-x-1">
+                    <MapPin className="w-3 h-3" />
+                    <span className="line-clamp-1">{currentEvent.location}</span>
+                  </div>
+                </div>
+
+                <div className="mt-1 flex items-center space-x-2">
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${getCategoryColor(currentEvent.category)} text-white`}>
+                    {currentEvent.category}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {getDaysUntilEvent(currentEvent.date)}
+                  </span>
+                  {currentEvent.price && (
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${
+                      currentEvent.price.isFree 
+                        ? 'bg-green-500/20 text-green-400' 
+                        : 'bg-yellow-500/20 text-yellow-400'
+                    }`}>
+                      {currentEvent.price.isFree ? 'Gratis' : `Rp ${currentEvent.price.amount.toLocaleString()}`}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Navigation Controls */}
+              <div className="flex items-center space-x-1">
+                <button
+                  onClick={prevSlide}
+                  className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                  aria-label="Previous event"
+                >
+                  <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                  aria-label="Next event"
+                >
+                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Slide Indicators */}
+        <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex space-x-1">
+          {events.slice(0, Math.min(5, events.length)).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                index === currentIndex % events.length
+                  ? 'bg-white'
+                  : 'bg-white/30'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+          {events.length > 5 && (
+            <span className="text-white/50 text-xs ml-1">+{events.length - 5}</span>
+          )}
+        </div>
+
+        {/* Link Overlay */}
+        <Link
+          href={`/event/${currentEvent.slug}`}
+          className="absolute inset-0 z-10"
+          aria-label={`View ${currentEvent.title}`}
+        />
+      </div>
+    </div>
+  );
+}

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Calendar, Clock, MapPin, Star, Zap, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, MapPin, Star, Zap, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Event {
   _id: string;
@@ -38,10 +38,15 @@ export default function EventRunningText({
   className = ''
 }: EventRunningTextProps) {
   const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(false); // Start with false to show demo immediately
+  const [loading, setLoading] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isManualControl, setIsManualControl] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
 
   // Demo events that are always available
   const demoEvents = [
@@ -120,6 +125,65 @@ export default function EventRunningText({
       fetchEvents();
     }
   }, [enabled]);
+
+  // Auto-scroll functionality
+  useEffect(() => {
+    if (!isManualControl && events.length > 1 && !isPaused) {
+      autoScrollRef.current = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % events.length);
+      }, speed * 1000);
+    }
+
+    return () => {
+      if (autoScrollRef.current) {
+        clearInterval(autoScrollRef.current);
+      }
+    };
+  }, [isManualControl, events.length, isPaused, speed]);
+
+  // Touch handlers for swipe functionality
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe || isRightSwipe) {
+      setIsManualControl(true);
+      if (isLeftSwipe) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+
+      // Resume auto-scroll after 5 seconds
+      setTimeout(() => setIsManualControl(false), 5000);
+    }
+  };
+
+  const nextSlide = useCallback(() => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % events.length);
+  }, [events.length]);
+
+  const prevSlide = useCallback(() => {
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + events.length) % events.length);
+  }, [events.length]);
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index);
+    setIsManualControl(true);
+    setTimeout(() => setIsManualControl(false), 5000);
+  };
 
   const fetchEvents = async () => {
     try {

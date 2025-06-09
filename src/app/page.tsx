@@ -11,7 +11,7 @@ import HorizontalNewsCards from '@/components/HorizontalNewsCards';
 import PopularCategories from '@/components/PopularCategories';
 import AdDisplay from '@/components/AdDisplay';
 import EventCards from '@/components/EventCards';
-import EventRunningText from '@/components/EventRunningText';
+import EventRunningTextOptimized from '@/components/EventRunningTextOptimized';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -131,9 +131,9 @@ function HomeContent() {
       <BreakingNewsSlider />
 
       {/* Event Running Text - Above Everything */}
-      <EventRunningText
+      <EventRunningTextOptimized
         enabled={true}
-        speed={60}
+        speed={5}
         pauseOnHover={true}
         className="mb-4"
       />
