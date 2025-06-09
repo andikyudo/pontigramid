@@ -209,7 +209,7 @@ export async function verifyCSRFToken(token: string): Promise<boolean> {
 export async function verifyAuth(request: Request): Promise<{ success: boolean; user?: AdminUser; error?: string }> {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('auth-token')?.value;
+    const token = cookieStore.get(COOKIE_NAME)?.value;
 
     if (!token) {
       return { success: false, error: 'No authentication token found' };
