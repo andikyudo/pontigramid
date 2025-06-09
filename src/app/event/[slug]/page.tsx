@@ -54,17 +54,30 @@ interface EventPageProps {
 
 async function getEvent(slug: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
+                   'http://localhost:3000';
+
     const response = await fetch(`${baseUrl}/api/public-events/${slug}`, {
-      cache: 'no-store'
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {
+      console.error(`Failed to fetch event: ${response.status} ${response.statusText}`);
       return null;
     }
 
     const data = await response.json();
-    return data.success ? data.data : null;
+
+    if (!data.success) {
+      console.error('API returned error:', data.error);
+      return null;
+    }
+
+    return data.data;
   } catch (error) {
     console.error('Error fetching event:', error);
     return null;
@@ -112,27 +125,100 @@ export default async function EventDetailPage({ params }: EventPageProps) {
 
   const { event, relatedEvents } = eventData;
 
+  // Generate JSON-LD structured data for SEO
+  const jsonLd: Record<string, any> = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "name": event.title,
+    "description": event.description,
+    "startDate": event.date,
+    "location": {
+      "@type": "Place",
+      "name": event.location || "TBA",
+      "address": event.location || "TBA"
+    },
+    "organizer": {
+      "@type": "Organization",
+      "name": event.organizer || "Pontigram"
+    },
+    "image": event.imageUrl || "",
+    "url": `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pontigram.com'}/event/${event.slug}`,
+    "eventStatus": "https://schema.org/EventScheduled",
+    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode"
+  };
+
+  if (event.price) {
+    jsonLd["offers"] = {
+      "@type": "Offer",
+      "price": event.price.isFree ? "0" : event.price.amount.toString(),
+      "priceCurrency": event.price.currency || "IDR",
+      "availability": "https://schema.org/InStock"
+    };
+  }
+
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'Tanggal tidak valid';
+      }
+      return date.toLocaleDateString('id-ID', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Tanggal tidak valid';
+    }
   };
 
   const getDaysUntilEvent = (dateString: string) => {
-    const eventDate = new Date(dateString);
-    const now = new Date();
-    const diffTime = eventDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Hari ini';
-    if (diffDays === 1) return 'Besok';
-    if (diffDays < 0) return 'Sudah berlalu';
-    if (diffDays < 7) return `${diffDays} hari lagi`;
-    return `${Math.ceil(diffDays / 7)} minggu lagi`;
+    try {
+      const eventDate = new Date(dateString);
+      if (isNaN(eventDate.getTime())) {
+        return 'Tanggal tidak valid';
+      }
+
+      const now = new Date();
+      const diffTime = eventDate.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) return 'Hari ini';
+      if (diffDays === 1) return 'Besok';
+      if (diffDays < 0) {
+        const pastDays = Math.abs(diffDays);
+        if (pastDays === 1) return 'Kemarin';
+        if (pastDays < 7) return `${pastDays} hari yang lalu`;
+        return `${Math.ceil(pastDays / 7)} minggu yang lalu`;
+      }
+      if (diffDays < 7) return `${diffDays} hari lagi`;
+      if (diffDays < 30) return `${Math.ceil(diffDays / 7)} minggu lagi`;
+      return `${Math.ceil(diffDays / 30)} bulan lagi`;
+    } catch (error) {
+      console.error('Error calculating days until event:', error);
+      return 'Tanggal tidak valid';
+    }
+  };
+
+  const formatTime = (timeString: string) => {
+    if (!timeString) return 'Waktu belum ditentukan';
+    try {
+      // Handle both HH:MM and HH:MM:SS formats
+      const timeParts = timeString.split(':');
+      if (timeParts.length >= 2) {
+        const hours = parseInt(timeParts[0]);
+        const minutes = parseInt(timeParts[1]);
+        if (!isNaN(hours) && !isNaN(minutes)) {
+          return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+      }
+      return timeString;
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return timeString || 'Waktu tidak valid';
+    }
   };
 
   const getCategoryColor = (category: string) => {
@@ -156,6 +242,12 @@ export default async function EventDetailPage({ params }: EventPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <Header />
       
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6">
@@ -242,7 +334,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
                   <div className="flex items-center space-x-3 text-gray-600">
                     <Clock className="w-5 h-5 text-blue-500" />
                     <div>
-                      <p className="font-medium">{event.time} WIB</p>
+                      <p className="font-medium">{formatTime(event.time)} WIB</p>
                       <p className="text-sm">Waktu Indonesia Barat</p>
                     </div>
                   </div>
@@ -250,7 +342,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
                   <div className="flex items-center space-x-3 text-gray-600">
                     <MapPin className="w-5 h-5 text-blue-500" />
                     <div>
-                      <p className="font-medium">{event.location}</p>
+                      <p className="font-medium">{event.location || 'Lokasi belum ditentukan'}</p>
                       <p className="text-sm">Lokasi Event</p>
                     </div>
                   </div>
@@ -258,7 +350,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
                   <div className="flex items-center space-x-3 text-gray-600">
                     <Users className="w-5 h-5 text-blue-500" />
                     <div>
-                      <p className="font-medium">{event.organizer}</p>
+                      <p className="font-medium">{event.organizer || 'Penyelenggara belum ditentukan'}</p>
                       <p className="text-sm">Penyelenggara</p>
                     </div>
                   </div>
