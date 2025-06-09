@@ -66,12 +66,18 @@ export default function CreateEventPage() {
   };
 
   const handleImageSelect = (dataUrl: string, file: File) => {
+    console.log('handleImageSelect called:', { fileName: file.name, fileSize: file.size });
     setImagePreview(dataUrl);
     setCompressedImageFile(file);
+    console.log('Image preview and compressed file set successfully');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('=== FORM SUBMIT STARTED ===');
+    console.log('Event triggered by:', e.target);
+    console.log('Form data:', formData);
+    console.log('Has compressed image:', !!compressedImageFile);
     setLoading(true);
 
     try {
@@ -95,9 +101,14 @@ export default function CreateEventPage() {
       const result = await response.json();
 
       if (result.success) {
+        console.log('=== SUCCESS: Event created successfully ===');
+        console.log('API Response:', result);
         alert('Event berhasil dibuat!');
+        console.log('Success alert shown, redirecting to /admin/events');
         router.push('/admin/events');
       } else {
+        console.log('=== ERROR: Event creation failed ===');
+        console.log('Error response:', result);
         alert(result.error || 'Gagal membuat event');
       }
     } catch (error) {
@@ -443,25 +454,48 @@ export default function CreateEventPage() {
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    Menyimpan...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Simpan Event
-                  </>
+              {/* Form Status */}
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 className="text-sm font-medium text-blue-900 mb-2">Status Form</h4>
+                <p className="text-xs text-blue-700">
+                  {loading ? 'Sedang menyimpan event...' : 'Siap untuk disimpan'}
+                </p>
+                {imagePreview && (
+                  <p className="text-xs text-green-700 mt-1">
+                    ✓ Gambar telah dipilih dan dikompres
+                  </p>
                 )}
-              </Button>
+              </div>
             </div>
+          </div>
+
+          {/* Form Submit Actions */}
+          <div className="flex justify-end space-x-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              disabled={loading}
+            >
+              Batal
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="flex items-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Menyimpan...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Simpan Event
+                </>
+              )}
+            </Button>
           </div>
         </form>
       </div>
