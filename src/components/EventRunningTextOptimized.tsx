@@ -103,8 +103,16 @@ export default function EventRunningTextOptimized({
         console.error('EventRunningTextOptimized: API request failed with status:', response.status);
         const errorText = await response.text();
         console.error('EventRunningTextOptimized: Error response:', errorText.substring(0, 500));
-        setEvents([]);
-        setHasError(true);
+
+        // Check if it's a Vercel authentication issue
+        if (response.status === 401 || errorText.includes('Authentication Required') || errorText.includes('vercel.com/sso-api')) {
+          console.error('EventRunningTextOptimized: Vercel authentication protection detected');
+          setEvents([]);
+          setHasError(true);
+        } else {
+          setEvents([]);
+          setHasError(true);
+        }
       }
     } catch (error) {
       console.error('EventRunningTextOptimized: Error fetching events:', error);
@@ -226,19 +234,19 @@ export default function EventRunningTextOptimized({
   // Show error state
   if (hasError) {
     return (
-      <div className={`relative overflow-hidden bg-gradient-to-r from-red-800 via-red-900 to-black backdrop-blur-sm border-b border-red-600/50 ${className}`}>
+      <div className={`relative overflow-hidden bg-gradient-to-r from-yellow-800 via-yellow-900 to-black backdrop-blur-sm border-b border-yellow-600/50 ${className}`}>
         <div className="flex items-center px-4 py-3 sm:py-4">
           <div className="flex-shrink-0 mr-3 sm:mr-4">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-red-700 flex items-center justify-center">
-              <span className="text-white text-lg">⚠️</span>
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-yellow-700 flex items-center justify-center">
+              <span className="text-white text-lg">🔒</span>
             </div>
           </div>
           <div className="flex-1">
             <h3 className="text-white font-semibold text-sm sm:text-base mb-1">
-              Gagal Memuat Event
+              Event API Terlindungi
             </h3>
-            <p className="text-red-200 text-xs sm:text-sm">
-              Terjadi kesalahan saat memuat data event. Silakan refresh halaman.
+            <p className="text-yellow-200 text-xs sm:text-sm">
+              API event sedang dalam mode pengembangan. Event akan ditampilkan setelah konfigurasi selesai.
             </p>
           </div>
         </div>
