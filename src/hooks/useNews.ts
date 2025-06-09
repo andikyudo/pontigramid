@@ -214,7 +214,12 @@ export const useCategoryCounts = () => {
         { id: 'hiburan', name: 'Hiburan', icon: 'Music', bgColor: 'bg-pink-50', textColor: 'text-pink-600', borderColor: 'border-pink-200' },
         { id: 'kesehatan', name: 'Kesehatan', icon: 'Heart', bgColor: 'bg-red-50', textColor: 'text-red-600', borderColor: 'border-red-200' },
         { id: 'pendidikan', name: 'Pendidikan', icon: 'BookOpen', bgColor: 'bg-indigo-50', textColor: 'text-indigo-600', borderColor: 'border-indigo-200' },
-        { id: 'umum', name: 'Umum', icon: 'Globe', bgColor: 'bg-gray-50', textColor: 'text-gray-600', borderColor: 'border-gray-200' }
+        { id: 'umum', name: 'Umum', icon: 'Globe', bgColor: 'bg-gray-50', textColor: 'text-gray-600', borderColor: 'border-gray-200' },
+        { id: 'kriminal', name: 'Kriminal', icon: 'AlertTriangle', bgColor: 'bg-red-50', textColor: 'text-red-700', borderColor: 'border-red-200' },
+        { id: 'kepolisian', name: 'Kepolisian', icon: 'Shield', bgColor: 'bg-blue-50', textColor: 'text-blue-700', borderColor: 'border-blue-200' },
+        { id: 'hukum', name: 'Hukum', icon: 'Scale', bgColor: 'bg-amber-50', textColor: 'text-amber-700', borderColor: 'border-amber-200' },
+        { id: 'keamanan', name: 'Keamanan', icon: 'Shield', bgColor: 'bg-orange-50', textColor: 'text-orange-700', borderColor: 'border-orange-200' },
+        { id: 'investigasi', name: 'Investigasi', icon: 'Search', bgColor: 'bg-slate-50', textColor: 'text-slate-700', borderColor: 'border-slate-200' }
       ];
 
       // Fetch news count for each category in parallel

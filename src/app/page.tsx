@@ -9,6 +9,8 @@ import RunningTextTicker from '@/components/RunningTextTicker';
 import TrendingNews from '@/components/TrendingNews';
 import HorizontalNewsCards from '@/components/HorizontalNewsCards';
 import PopularCategories from '@/components/PopularCategories';
+import AdDisplay from '@/components/AdDisplay';
+import EventCards from '@/components/EventCards';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -127,6 +129,11 @@ function HomeContent() {
       {/* Breaking News Slider */}
       <BreakingNewsSlider />
 
+      {/* Header Advertisement */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-2">
+        <AdDisplay zone="header" limit={1} className="mb-4" />
+      </div>
+
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8">
         {/* Hero Section - Simplified for mobile */}
         <div className="text-center mb-6 sm:mb-8">
@@ -154,18 +161,50 @@ function HomeContent() {
           </div>
         ) : (
           <>
-            {/* News Grid */}
-            {news && news.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-                {news.map((item) => (
-                  <NewsCard key={item._id} news={item} />
-                ))}
+            {/* Main Content with Sidebar */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
+              {/* News Grid */}
+              <div className="lg:col-span-3">
+                {news && news.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {news.map((item, index) => (
+                      <div key={item._id}>
+                        <NewsCard news={item} />
+                        {/* Mobile Inline Ads every 3 articles */}
+                        {(index + 1) % 3 === 0 && (
+                          <div className="block lg:hidden mt-4">
+                            <AdDisplay zone="mobile-inline" limit={1} />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500 text-lg">Tidak ada berita ditemukan</p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">Tidak ada berita ditemukan</p>
+
+              {/* Sidebar - Desktop Only */}
+              <div className="hidden lg:block lg:col-span-1">
+                <div className="sticky top-8 space-y-6">
+                  {/* Sidebar Advertisement */}
+                  <AdDisplay zone="sidebar" limit={2} />
+
+                  {/* Featured Events */}
+                  <div className="bg-white rounded-lg shadow-md p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Event Mendatang</h3>
+                    <EventCards featured={true} limit={3} className="space-y-4" />
+                  </div>
+                </div>
               </div>
-            )}
+            </div>
+
+            {/* Content Advertisement */}
+            <div className="mb-8">
+              <AdDisplay zone="content" limit={1} />
+            </div>
 
             {/* Load More Button */}
             {hasNextPage && (
@@ -195,9 +234,31 @@ function HomeContent() {
         <>
           <TrendingNews />
           <HorizontalNewsCards />
+
+          {/* Featured Events Section */}
+          <section className="py-8 sm:py-12 bg-gray-50">
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+              <div className="text-center mb-6 sm:mb-8 lg:mb-10">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+                  Event Unggulan
+                </h2>
+                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
+                  Jangan lewatkan event-event menarik yang akan datang
+                </p>
+                <div className="mt-3 sm:mt-4 w-16 sm:w-24 h-1 bg-blue-500 mx-auto rounded-full"></div>
+              </div>
+              <EventCards featured={true} limit={6} />
+            </div>
+          </section>
+
           <PopularCategories />
         </>
       )}
+
+      {/* Footer Advertisement */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4">
+        <AdDisplay zone="footer" limit={1} />
+      </div>
 
       {/* Footer */}
       <Footer />
