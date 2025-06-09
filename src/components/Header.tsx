@@ -80,10 +80,10 @@ export default function Header({ onSearch, onCategoryChange, currentCategory = '
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-bold text-white group-hover:text-red-400 transition-colors duration-300">
-                PontigramID
+                Pontigram
               </span>
-              <span className="text-xs text-gray-300 hidden sm:block">
-                Portal Berita Terpercaya
+              <span className="text-xs text-gray-300 block">
+                Jaringan Informasi Kota Pontianak dan Sekitarnya
               </span>
             </div>
           </Link>

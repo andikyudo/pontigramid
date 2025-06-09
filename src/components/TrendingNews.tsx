@@ -112,10 +112,7 @@ export default function TrendingNews() {
                                 fill
                                 className="object-cover rounded-l-lg"
                                 sizes="96px"
-                                onError={(e) => {
-                                  console.error('Image load error:', e);
-                                  handleImageError(news.slug);
-                                }}
+                                onError={() => handleImageError(news.slug)}
                                 priority={false}
                               />
                             )
@@ -220,10 +217,7 @@ export default function TrendingNews() {
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            onError={(e) => {
-                              console.error('Image load error:', e);
-                              handleImageError(news.slug);
-                            }}
+                            onError={() => handleImageError(news.slug)}
                             priority={index < 2}
                           />
                         )

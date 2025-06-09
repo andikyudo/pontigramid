@@ -297,13 +297,13 @@ export default function Footer() {
                 };
                 const IconComponent = getIconComponent(social.icon);
 
-                // Enhanced styling per platform
+                // Enhanced styling per platform - harmonized with site colors
                 const getPlatformStyle = (iconName: string) => {
                   switch (iconName) {
                     case 'Facebook':
-                      return 'bg-blue-600 hover:bg-blue-700 hover:shadow-blue-500/50';
+                      return 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-500/50';
                     case 'Instagram':
-                      return 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 hover:shadow-pink-500/50';
+                      return 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 hover:shadow-purple-500/50';
                     default:
                       return 'bg-gray-600 hover:bg-gray-700';
                   }
