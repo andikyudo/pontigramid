@@ -153,51 +153,91 @@ const getDemoEvent = (slug: string) => {
 
 async function getEvent(slug: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
-                   'http://localhost:3000';
+    // First try to get from database directly (server-side)
+    console.log('Fetching event directly from database for slug:', slug);
 
-    const response = await fetch(`${baseUrl}/api/public-events/${slug}`, {
-      cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    // Import database connection and model
+    const { connectDB } = await import('@/lib/mongodb');
+    const Event = (await import('@/models/Event')).default;
 
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success) {
-        return data.data;
-      }
-    }
+    await connectDB();
 
-    // If API fails or event not found, try demo events as fallback
-    console.log('Trying demo event fallback for slug:', slug);
-    const demoEvent = getDemoEvent(slug);
+    // Find the event in database
+    const event = await Event.findOne({
+      slug,
+      isActive: true
+    }).lean();
 
-    if (demoEvent) {
-      // Format demo event to match API response structure
+    if (event) {
+      console.log('Found database event:', (event as any).title);
+
+      // Get related events
+      const relatedEvents = await Event.find({
+        category: (event as any).category,
+        _id: { $ne: (event as any)._id },
+        isActive: true,
+        date: { $gte: new Date() }
+      })
+      .sort({ date: 1 })
+      .limit(3)
+      .select('title imageUrl date time location slug')
+      .lean();
+
+      // Transform database event to match expected format
+      const transformedEvent = {
+        _id: (event as any)._id.toString(),
+        title: (event as any).title,
+        description: (event as any).description,
+        imageUrl: (event as any).imageUrl,
+        date: (event as any).date,
+        time: (event as any).time,
+        location: (event as any).location,
+        category: (event as any).category,
+        organizer: (event as any).organizer,
+        slug: (event as any).slug,
+        isFeatured: (event as any).isFeatured,
+        isActive: (event as any).isActive,
+        price: (event as any).price,
+        contact: (event as any).contactInfo,
+        registrationRequired: (event as any).registrationRequired,
+        maxParticipants: (event as any).maxParticipants,
+        currentParticipants: (event as any).currentParticipants,
+        tags: (event as any).tags
+      };
+
+      const transformedRelatedEvents = relatedEvents.map(relatedEvent => ({
+        _id: (relatedEvent as any)._id.toString(),
+        title: (relatedEvent as any).title,
+        imageUrl: (relatedEvent as any).imageUrl,
+        date: (relatedEvent as any).date,
+        time: (relatedEvent as any).time,
+        location: (relatedEvent as any).location,
+        slug: (relatedEvent as any).slug
+      }));
+
       return {
-        event: demoEvent,
-        relatedEvents: []
+        event: transformedEvent,
+        relatedEvents: transformedRelatedEvents
       };
     }
 
-    return null;
+    console.log('Event not found in database, trying demo events...');
+
   } catch (error) {
-    console.error('Error fetching event:', error);
-
-    // Try demo events as fallback on error
-    const demoEvent = getDemoEvent(slug);
-    if (demoEvent) {
-      return {
-        event: demoEvent,
-        relatedEvents: []
-      };
-    }
-
-    return null;
+    console.error('Database error, falling back to demo events:', error);
   }
+
+  // Fallback to demo events
+  const demoEvent = getDemoEvent(slug);
+  if (demoEvent) {
+    console.log('Using demo event:', demoEvent.title);
+    return {
+      event: demoEvent,
+      relatedEvents: []
+    };
+  }
+
+  return null;
 }
 
 export async function generateMetadata({ params }: EventPageProps): Promise<Metadata> {
@@ -219,14 +259,14 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
     openGraph: {
       title: event.title,
       description: event.description,
-      images: event.imageUrl ? [event.imageUrl] : [],
+      images: (event as any).imageUrl ? [(event as any).imageUrl] : [],
       type: 'article',
     },
     twitter: {
       card: 'summary_large_image',
       title: event.title,
       description: event.description,
-      images: event.imageUrl ? [event.imageUrl] : [],
+      images: (event as any).imageUrl ? [(event as any).imageUrl] : [],
     }
   };
 }
@@ -257,7 +297,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
       "@type": "Organization",
       "name": event.organizer || "Pontigram"
     },
-    "image": event.imageUrl || "",
+    "image": (event as any).imageUrl || "",
     "url": `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pontigram.com'}/event/${event.slug}`,
     "eventStatus": "https://schema.org/EventScheduled",
     "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode"
@@ -393,18 +433,18 @@ export default async function EventDetailPage({ params }: EventPageProps) {
             {/* Event Header */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
               {/* Event Image */}
-              {event.imageUrl && (
+              {(event as any).imageUrl && (
                 <div className="relative h-64 sm:h-80 lg:h-96">
-                  {event.imageUrl.startsWith('data:') ? (
+                  {(event as any).imageUrl.startsWith('data:') ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={event.imageUrl}
+                      src={(event as any).imageUrl}
                       alt={event.title}
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <Image
-                      src={event.imageUrl}
+                      src={(event as any).imageUrl}
                       alt={event.title}
                       fill
                       className="object-cover"
@@ -502,11 +542,11 @@ export default async function EventDetailPage({ params }: EventPageProps) {
                 </div>
 
                 {/* Tags */}
-                {event.tags && event.tags.length > 0 && (
+                {(event as any).tags && (event as any).tags.length > 0 && (
                   <div className="mt-6">
                     <h4 className="text-lg font-medium text-gray-900 mb-3">Tags</h4>
                     <div className="flex flex-wrap gap-2">
-                      {event.tags.map((tag: string, index: number) => (
+                      {(event as any).tags.map((tag: string, index: number) => (
                         <span
                           key={index}
                           className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
@@ -530,39 +570,39 @@ export default async function EventDetailPage({ params }: EventPageProps) {
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-6">
               {/* Contact Information */}
-              {(event.contactEmail || event.contactPhone || event.contactWebsite) && (
+              {((event as any).contactEmail || (event as any).contactPhone || (event as any).contactWebsite) && (
                 <div className="bg-white rounded-lg shadow-md p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Informasi Kontak</h3>
                   <div className="space-y-3">
-                    {event.contactEmail && (
+                    {(event as any).contactEmail && (
                       <div className="flex items-center space-x-3">
                         <Mail className="w-5 h-5 text-blue-500" />
-                        <a 
-                          href={`mailto:${event.contactEmail}`}
+                        <a
+                          href={`mailto:${(event as any).contactEmail}`}
                           className="text-blue-600 hover:text-blue-800"
                         >
-                          {event.contactEmail}
+                          {(event as any).contactEmail}
                         </a>
                       </div>
                     )}
-                    
-                    {event.contactPhone && (
+
+                    {(event as any).contactPhone && (
                       <div className="flex items-center space-x-3">
                         <Phone className="w-5 h-5 text-green-500" />
-                        <a 
-                          href={`tel:${event.contactPhone}`}
+                        <a
+                          href={`tel:${(event as any).contactPhone}`}
                           className="text-green-600 hover:text-green-800"
                         >
-                          {event.contactPhone}
+                          {(event as any).contactPhone}
                         </a>
                       </div>
                     )}
-                    
-                    {event.contactWebsite && (
+
+                    {(event as any).contactWebsite && (
                       <div className="flex items-center space-x-3">
                         <Globe className="w-5 h-5 text-purple-500" />
-                        <a 
-                          href={event.contactWebsite}
+                        <a
+                          href={(event as any).contactWebsite}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-purple-600 hover:text-purple-800"
@@ -576,18 +616,18 @@ export default async function EventDetailPage({ params }: EventPageProps) {
               )}
 
               {/* Registration Info */}
-              {event.registrationRequired && (
+              {(event as any).registrationRequired && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-blue-900 mb-3">Informasi Pendaftaran</h3>
                   <div className="space-y-2 text-blue-800">
-                    {event.maxParticipants && (
+                    {(event as any).maxParticipants && (
                       <p className="text-sm">
-                        <span className="font-medium">Maksimal Peserta:</span> {event.maxParticipants} orang
+                        <span className="font-medium">Maksimal Peserta:</span> {(event as any).maxParticipants} orang
                       </p>
                     )}
-                    {event.registrationDeadline && (
+                    {(event as any).registrationDeadline && (
                       <p className="text-sm">
-                        <span className="font-medium">Batas Pendaftaran:</span> {formatDate(event.registrationDeadline)}
+                        <span className="font-medium">Batas Pendaftaran:</span> {formatDate((event as any).registrationDeadline)}
                       </p>
                     )}
                   </div>
@@ -608,25 +648,25 @@ export default async function EventDetailPage({ params }: EventPageProps) {
                 <div className="bg-white rounded-lg shadow-md p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Terkait</h3>
                   <div className="space-y-4">
-                    {relatedEvents.map((relatedEvent: EventData) => (
+                    {relatedEvents.map((relatedEvent: any) => (
                       <Link
                         key={relatedEvent._id}
                         href={`/event/${relatedEvent.slug}`}
                         className="block group"
                       >
                         <div className="flex space-x-3">
-                          {relatedEvent.imageUrl && (
+                          {(relatedEvent as any).imageUrl && (
                             <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                              {relatedEvent.imageUrl.startsWith('data:') ? (
+                              {(relatedEvent as any).imageUrl.startsWith('data:') ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
-                                  src={relatedEvent.imageUrl}
+                                  src={(relatedEvent as any).imageUrl}
                                   alt={relatedEvent.title}
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
                                 <Image
-                                  src={relatedEvent.imageUrl}
+                                  src={(relatedEvent as any).imageUrl}
                                   alt={relatedEvent.title}
                                   fill
                                   className="object-cover"

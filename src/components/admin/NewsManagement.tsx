@@ -221,6 +221,10 @@ export default function NewsManagement() {
               <option value="hiburan">Hiburan</option>
               <option value="kesehatan">Kesehatan</option>
               <option value="pendidikan">Pendidikan</option>
+              <option value="hukum">Hukum</option>
+              <option value="sosial">Sosial</option>
+              <option value="budaya">Budaya</option>
+              <option value="umum">Umum</option>
             </select>
 
             <select
