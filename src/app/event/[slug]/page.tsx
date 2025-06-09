@@ -19,7 +19,7 @@ import {
   Globe
 } from 'lucide-react';
 
-interface Event {
+interface EventData {
   _id: string;
   title: string;
   description: string;
@@ -55,7 +55,7 @@ interface EventPageProps {
 async function getEvent(slug: string) {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/events/${slug}`, {
+    const response = await fetch(`${baseUrl}/api/public-events/${slug}`, {
       cache: 'no-store'
     });
 
@@ -188,6 +188,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
               {event.imageUrl && (
                 <div className="relative h-64 sm:h-80 lg:h-96">
                   {event.imageUrl.startsWith('data:') ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={event.imageUrl}
                       alt={event.title}
@@ -399,7 +400,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
                 <div className="bg-white rounded-lg shadow-md p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Terkait</h3>
                   <div className="space-y-4">
-                    {relatedEvents.map((relatedEvent: any) => (
+                    {relatedEvents.map((relatedEvent: EventData) => (
                       <Link
                         key={relatedEvent._id}
                         href={`/event/${relatedEvent.slug}`}
@@ -409,6 +410,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
                           {relatedEvent.imageUrl && (
                             <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                               {relatedEvent.imageUrl.startsWith('data:') ? (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                   src={relatedEvent.imageUrl}
                                   alt={relatedEvent.title}

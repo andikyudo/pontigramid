@@ -27,15 +27,13 @@ interface Event {
 interface EventRunningTextProps {
   enabled?: boolean;
   speed?: number;
-  pauseOnHover?: boolean;
   className?: string;
 }
 
-export default function EventRunningTextOptimized({ 
-  enabled = true, 
-  speed = 5, 
-  pauseOnHover = true,
-  className = '' 
+export default function EventRunningTextOptimized({
+  enabled = true,
+  speed = 5,
+  className = ''
 }: EventRunningTextProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -75,8 +73,8 @@ export default function EventRunningTextOptimized({
       setIsLoading(true);
       setHasError(false);
 
-      console.log('EventRunningTextOptimized: Fetching events from /api/events...');
-      const response = await fetch('/api/events?upcoming=true&limit=10');
+      console.log('EventRunningTextOptimized: Fetching events from /api/public-events...');
+      const response = await fetch('/api/public-events?upcoming=true&limit=10');
       console.log('EventRunningTextOptimized: Response status:', response.status);
       console.log('EventRunningTextOptimized: Response headers:', Object.fromEntries(response.headers.entries()));
 
@@ -295,6 +293,8 @@ export default function EventRunningTextOptimized({
             <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden">
               {currentEvent.imageUrl && !imageErrors[currentEvent._id] ? (
                 currentEvent.imageUrl.startsWith('data:') ? (
+                  // Use regular img tag for base64 images (Next.js Image doesn't support base64)
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={currentEvent.imageUrl}
                     alt={currentEvent.title}

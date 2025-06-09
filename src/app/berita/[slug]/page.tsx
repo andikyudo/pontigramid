@@ -100,7 +100,8 @@ export default function NewsDetail() {
           {news.imageUrl && (
             <div className="relative h-64 sm:h-80 md:h-96">
               {news.imageUrl.startsWith('data:') ? (
-                // Handle base64 images with regular img tag
+                // Handle base64 images with regular img tag (Next.js Image doesn't support base64)
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={news.imageUrl}
                   alt={news.title}

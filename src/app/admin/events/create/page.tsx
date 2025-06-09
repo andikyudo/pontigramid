@@ -6,16 +6,14 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import AdminAuth from '@/components/admin/AdminAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import ImageUploadWithCompression from '@/components/ImageUploadWithCompression';
-import { 
-  ArrowLeft, 
-  Save, 
-  Upload, 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  Users, 
+import {
+  ArrowLeft,
+  Save,
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
   DollarSign,
   Star,
   Eye,
