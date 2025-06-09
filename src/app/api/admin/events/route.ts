@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import Event from '@/models/Event';
 import { verifyAuth } from '@/lib/auth';
-import { compressImage } from '@/lib/imageUtils';
 
 // GET - Fetch all events with filtering
 export async function GET(request: NextRequest) {
@@ -124,13 +123,32 @@ export async function POST(request: NextRequest) {
     let imageUrl = '';
     if (imageFile && imageFile.size > 0) {
       try {
-        imageUrl = await compressImage(imageFile, {
-          maxWidth: 1200,
-          maxHeight: 800,
-          quality: 0.8
-        });
+        // Validate image file
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (!validTypes.includes(imageFile.type)) {
+          return NextResponse.json(
+            { success: false, error: 'Format gambar tidak didukung. Gunakan JPEG, PNG, WebP, atau GIF.' },
+            { status: 400 }
+          );
+        }
+
+        // Check file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (imageFile.size > maxSize) {
+          return NextResponse.json(
+            { success: false, error: 'Ukuran file terlalu besar. Maksimal 10MB.' },
+            { status: 400 }
+          );
+        }
+
+        // Convert file to base64 data URL for storage
+        const arrayBuffer = await imageFile.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const base64 = buffer.toString('base64');
+        imageUrl = `data:${imageFile.type};base64,${base64}`;
+
       } catch (error) {
-        console.error('Error compressing image:', error);
+        console.error('Error processing image:', error);
         return NextResponse.json(
           { success: false, error: 'Gagal memproses gambar' },
           { status: 400 }
@@ -138,11 +156,32 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Generate slug from title
+    const generateSlug = (text: string) => {
+      return text
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+    };
+
+    const baseSlug = generateSlug(title);
+    let slug = baseSlug;
+    let counter = 1;
+
+    // Ensure unique slug
+    while (await Event.findOne({ slug })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
     // Create event data
     const eventData: any = {
       title,
       description,
       imageUrl,
+      slug,
       date: new Date(date),
       time,
       location,
