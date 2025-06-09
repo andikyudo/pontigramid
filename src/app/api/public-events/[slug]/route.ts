@@ -28,7 +28,7 @@ export async function GET(
     const event = await Event.findOne({
       slug,
       isActive: true
-    }).lean();
+    }).lean() as any;
 
     if (!event) {
       console.log('Public Event Detail API: Event not found for slug:', slug);
@@ -38,7 +38,7 @@ export async function GET(
       );
     }
 
-    console.log('Public Event Detail API: Found event:', event.title);
+    console.log('Public Event Detail API: Found event:', event?.title || 'Unknown');
 
     // Get related events (same category, excluding current event)
     const relatedEvents = await Event.find({
@@ -50,7 +50,7 @@ export async function GET(
     .sort({ date: 1 })
     .limit(3)
     .select('title imageUrl date time location slug')
-    .lean();
+    .lean() as any[];
 
     console.log('Public Event Detail API: Found', relatedEvents.length, 'related events');
 

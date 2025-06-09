@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const events = await Event.find(query)
       .sort({ date: 1, createdAt: -1 })
       .limit(limit)
-      .lean();
+      .lean() as any[];
 
     console.log('Public Events API: Found', events.length, 'events');
 

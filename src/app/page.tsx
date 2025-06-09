@@ -134,7 +134,6 @@ function HomeContent() {
       <EventRunningTextOptimized
         enabled={true}
         speed={5}
-        pauseOnHover={true}
         className="mb-4"
       />
 
