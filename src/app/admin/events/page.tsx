@@ -6,20 +6,23 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Search, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Eye, 
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
   EyeOff,
   Filter,
   Calendar,
   MapPin,
   Users,
   Star,
-  Clock
+  Clock,
+  Settings,
+  Zap
 } from 'lucide-react';
+import EventRunningTextSettings from '@/components/admin/EventRunningTextSettings';
 
 interface Event {
   _id: string;
@@ -52,6 +55,7 @@ export default function EventsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [activeTab, setActiveTab] = useState('events');
 
   useEffect(() => {
     fetchEvents();
@@ -189,7 +193,7 @@ export default function EventsPage() {
             <h1 className="text-2xl font-bold text-gray-900">Manajemen Event</h1>
             <p className="text-gray-600">Kelola event dan acara website</p>
           </div>
-          <Button 
+          <Button
             onClick={() => router.push('/admin/events/create')}
             className="flex items-center gap-2"
           >
@@ -198,8 +202,39 @@ export default function EventsPage() {
           </Button>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('events')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'events'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Calendar className="w-4 h-4 inline mr-2" />
+              Daftar Event
+            </button>
+            <button
+              onClick={() => setActiveTab('running-text')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'running-text'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Zap className="w-4 h-4 inline mr-2" />
+              Running Text
+            </button>
+          </nav>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'events' ? (
+          <>
+            {/* Filters */}
+            <div className="bg-white p-4 rounded-lg shadow-sm border">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -437,6 +472,11 @@ export default function EventsPage() {
             </div>
           )}
         </div>
+          </>
+        ) : (
+          /* Running Text Settings Tab */
+          <EventRunningTextSettings />
+        )}
       </div>
     </AdminLayout>
   );

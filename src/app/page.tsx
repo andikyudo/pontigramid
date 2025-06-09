@@ -11,6 +11,7 @@ import HorizontalNewsCards from '@/components/HorizontalNewsCards';
 import PopularCategories from '@/components/PopularCategories';
 import AdDisplay from '@/components/AdDisplay';
 import EventCards from '@/components/EventCards';
+import EventRunningText from '@/components/EventRunningText';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -133,6 +134,14 @@ function HomeContent() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-2">
         <AdDisplay zone="header" limit={1} className="mb-4" />
       </div>
+
+      {/* Event Running Text - Strategic Placement */}
+      <EventRunningText
+        enabled={true}
+        speed={60}
+        pauseOnHover={true}
+        className="mb-6"
+      />
 
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8">
         {/* Hero Section - Simplified for mobile */}

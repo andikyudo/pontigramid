@@ -14,7 +14,9 @@ const categories = [
   { id: 'teknologi', name: 'Teknologi' },
   { id: 'hiburan', name: 'Hiburan' },
   { id: 'kesehatan', name: 'Kesehatan' },
-  { id: 'pendidikan', name: 'Pendidikan' }
+  { id: 'pendidikan', name: 'Pendidikan' },
+  { id: 'umum', name: 'Umum' },
+  { id: 'hukum', name: 'Hukum' }
 ];
 
 interface HeaderProps {
