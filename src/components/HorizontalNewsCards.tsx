@@ -26,7 +26,12 @@ const categoryColors: { [key: string]: string } = {
   hiburan: 'bg-pink-100 text-pink-800',
   kesehatan: 'bg-yellow-100 text-yellow-800',
   pendidikan: 'bg-indigo-100 text-indigo-800',
-  umum: 'bg-gray-100 text-gray-800'
+  umum: 'bg-gray-100 text-gray-800',
+  kriminal: 'bg-red-200 text-red-900',
+  kepolisian: 'bg-blue-200 text-blue-900',
+  hukum: 'bg-amber-200 text-amber-900',
+  keamanan: 'bg-orange-200 text-orange-900',
+  investigasi: 'bg-slate-200 text-slate-900'
 };
 
 export default function HorizontalNewsCards() {

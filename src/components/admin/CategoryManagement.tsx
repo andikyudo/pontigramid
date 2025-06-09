@@ -76,6 +76,56 @@ export default function CategoryManagement() {
         },
         {
           _id: '4',
+          name: 'Kriminal',
+          slug: 'kriminal',
+          description: 'Berita kriminal dan kejahatan',
+          color: '#DC2626',
+          icon: 'alert-triangle',
+          newsCount: 15,
+          createdAt: '2024-01-01T00:00:00Z'
+        },
+        {
+          _id: '5',
+          name: 'Kepolisian',
+          slug: 'kepolisian',
+          description: 'Berita kepolisian dan penegakan hukum',
+          color: '#1D4ED8',
+          icon: 'shield',
+          newsCount: 12,
+          createdAt: '2024-01-01T00:00:00Z'
+        },
+        {
+          _id: '6',
+          name: 'Hukum',
+          slug: 'hukum',
+          description: 'Berita hukum dan peradilan',
+          color: '#D97706',
+          icon: 'scale',
+          newsCount: 8,
+          createdAt: '2024-01-01T00:00:00Z'
+        },
+        {
+          _id: '7',
+          name: 'Keamanan',
+          slug: 'keamanan',
+          description: 'Berita keamanan dan ketertiban',
+          color: '#EA580C',
+          icon: 'shield',
+          newsCount: 10,
+          createdAt: '2024-01-01T00:00:00Z'
+        },
+        {
+          _id: '8',
+          name: 'Investigasi',
+          slug: 'investigasi',
+          description: 'Laporan investigasi mendalam',
+          color: '#475569',
+          icon: 'search',
+          newsCount: 6,
+          createdAt: '2024-01-01T00:00:00Z'
+        },
+        {
+          _id: '4',
           name: 'Teknologi',
           slug: 'teknologi',
           description: 'Berita teknologi dan inovasi',

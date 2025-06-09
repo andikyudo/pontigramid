@@ -12,7 +12,12 @@ import {
   GraduationCap,
   Globe,
   ArrowRight,
-  Loader2
+  Loader2,
+  Shield,
+  Scale,
+  Eye,
+  AlertTriangle,
+  Search
 } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { useCategoryCounts } from '@/hooks/useNews';
@@ -99,6 +104,51 @@ const categoriesConfig: CategoryData[] = [
     color: 'text-gray-600',
     bgColor: 'bg-gray-50 hover:bg-gray-100',
     count: 0
+  },
+  {
+    id: 'kriminal',
+    name: 'Kriminal',
+    description: 'Berita kriminal dan kejahatan',
+    icon: AlertTriangle,
+    color: 'text-red-700',
+    bgColor: 'bg-red-50 hover:bg-red-100',
+    count: 0
+  },
+  {
+    id: 'kepolisian',
+    name: 'Kepolisian',
+    description: 'Berita kepolisian dan penegakan hukum',
+    icon: Shield,
+    color: 'text-blue-700',
+    bgColor: 'bg-blue-50 hover:bg-blue-100',
+    count: 0
+  },
+  {
+    id: 'hukum',
+    name: 'Hukum',
+    description: 'Berita hukum dan peradilan',
+    icon: Scale,
+    color: 'text-amber-700',
+    bgColor: 'bg-amber-50 hover:bg-amber-100',
+    count: 0
+  },
+  {
+    id: 'keamanan',
+    name: 'Keamanan',
+    description: 'Berita keamanan dan ketertiban',
+    icon: Shield,
+    color: 'text-orange-700',
+    bgColor: 'bg-orange-50 hover:bg-orange-100',
+    count: 0
+  },
+  {
+    id: 'investigasi',
+    name: 'Investigasi',
+    description: 'Laporan investigasi mendalam',
+    icon: Search,
+    color: 'text-slate-700',
+    bgColor: 'bg-slate-50 hover:bg-slate-100',
+    count: 0
   }
 ];
 
@@ -120,7 +170,12 @@ export default function PopularCategories() {
     Music: Music,
     Heart: Heart,
     BookOpen: GraduationCap,
-    Globe: Globe
+    Globe: Globe,
+    AlertTriangle: AlertTriangle,
+    Shield: Shield,
+    Scale: Scale,
+    Eye: Eye,
+    Search: Search
   };
 
   // Transform categories to include proper icon components
