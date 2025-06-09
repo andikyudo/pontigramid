@@ -121,13 +121,20 @@ export async function GET(
       slug: relatedEvent.slug
     }));
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: {
         event: transformedEvent,
         relatedEvents: transformedRelatedEvents
       }
     });
+
+    // Add caching headers for individual event pages
+    response.headers.set('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=1200');
+    response.headers.set('CDN-Cache-Control', 'public, s-maxage=600');
+    response.headers.set('Vercel-CDN-Cache-Control', 'public, s-maxage=600');
+
+    return response;
 
   } catch (error) {
     console.error('Public Event Detail API Error:', error);

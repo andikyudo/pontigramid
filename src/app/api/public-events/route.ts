@@ -79,11 +79,18 @@ export async function GET(request: NextRequest) {
       updatedAt: event.updatedAt
     }));
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: transformedEvents,
       count: transformedEvents.length
     });
+
+    // Add caching headers for performance optimization
+    response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    response.headers.set('CDN-Cache-Control', 'public, s-maxage=300');
+    response.headers.set('Vercel-CDN-Cache-Control', 'public, s-maxage=300');
+
+    return response;
 
   } catch (error) {
     console.error('Public Events API Error:', error);

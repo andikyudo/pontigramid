@@ -434,21 +434,26 @@ export default async function EventDetailPage({ params }: EventPageProps) {
             <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
               {/* Event Image */}
               {(event as any).imageUrl && (
-                <div className="relative h-64 sm:h-80 lg:h-96">
+                <div className="relative h-64 sm:h-80 lg:h-96 bg-gray-100 flex items-center justify-center">
                   {(event as any).imageUrl.startsWith('data:') ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={(event as any).imageUrl}
                       alt={event.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover object-center"
+                      loading="lazy"
                     />
                   ) : (
                     <Image
                       src={(event as any).imageUrl}
                       alt={event.title}
                       fill
-                      className="object-cover"
-                      priority
+                      className="object-cover object-center"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+                      priority={true}
+                      quality={85}
+                      placeholder="blur"
+                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                     />
                   )}
                   

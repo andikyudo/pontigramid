@@ -74,7 +74,12 @@ export default function EventRunningTextOptimized({
       setHasError(false);
 
       console.log('EventRunningTextOptimized: Fetching events from /api/public-events...');
-      const response = await fetch('/api/public-events?upcoming=true&limit=10');
+      const response = await fetch('/api/public-events?upcoming=true&limit=10', {
+        next: { revalidate: 300 }, // Cache for 5 minutes
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+        }
+      });
       console.log('EventRunningTextOptimized: Response status:', response.status);
       console.log('EventRunningTextOptimized: Response headers:', Object.fromEntries(response.headers.entries()));
 
@@ -290,32 +295,34 @@ export default function EventRunningTextOptimized({
         <div className="flex items-center px-4 py-3 sm:py-4">
           {/* Event Image - Dynamic Images Priority */}
           <div className="flex-shrink-0 mr-3 sm:mr-4">
-            <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden">
+            <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
               {currentEvent.imageUrl && !imageErrors[currentEvent._id] ? (
                 currentEvent.imageUrl.startsWith('data:') ? (
-                  // Use regular img tag for base64 images (Next.js Image doesn't support base64)
+                  // Use regular img tag for base64 images with perfect centering
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={currentEvent.imageUrl}
                     alt={currentEvent.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-center"
                     onError={() => handleImageError(currentEvent._id)}
+                    loading="lazy"
                   />
                 ) : (
                   <Image
                     src={currentEvent.imageUrl}
                     alt={currentEvent.title}
                     fill
-                    className="object-cover"
-                    sizes="64px"
+                    className="object-cover object-center"
+                    sizes="(max-width: 640px) 48px, 64px"
                     onError={() => handleImageError(currentEvent._id)}
+                    priority={false}
                   />
                 )
               ) : (
-                // Dynamic gradient background instead of calendar icon
+                // Improved fallback with perfect centering and consistent design
                 <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(currentEvent.category)} flex items-center justify-center relative`}>
-                  {/* Category-specific icon instead of calendar */}
-                  <div className="text-white/90 text-lg sm:text-xl font-bold">
+                  {/* Category-specific icon with perfect centering */}
+                  <div className="text-white/90 text-base sm:text-lg font-bold flex items-center justify-center w-full h-full">
                     {currentEvent.category === 'teknologi' && '💻'}
                     {currentEvent.category === 'budaya' && '🎭'}
                     {currentEvent.category === 'bisnis' && '💼'}
@@ -328,11 +335,13 @@ export default function EventRunningTextOptimized({
                     {currentEvent.category === 'seminar' && '📚'}
                     {currentEvent.category === 'workshop' && '🔧'}
                     {currentEvent.category === 'festival' && '🎉'}
-                    {!['teknologi', 'budaya', 'bisnis', 'kesehatan', 'pendidikan', 'olahraga', 'hiburan', 'pameran', 'konferensi', 'seminar', 'workshop', 'festival'].includes(currentEvent.category) && '📅'}
+                    {currentEvent.category === 'musik' && '🎵'}
+                    {currentEvent.category === 'kuliner' && '🍽️'}
+                    {!['teknologi', 'budaya', 'bisnis', 'kesehatan', 'pendidikan', 'olahraga', 'hiburan', 'pameran', 'konferensi', 'seminar', 'workshop', 'festival', 'musik', 'kuliner'].includes(currentEvent.category) && '📅'}
                   </div>
-                  {/* Subtle pattern overlay */}
-                  <div className="absolute inset-0 bg-white/10 bg-opacity-20" style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='10' cy='10' r='1'/%3E%3C/g%3E%3C/svg%3E")`
+                  {/* Subtle pattern overlay with better opacity */}
+                  <div className="absolute inset-0 bg-black/5" style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='8' cy='8' r='1'/%3E%3C/g%3E%3C/svg%3E")`
                   }}></div>
                 </div>
               )}
