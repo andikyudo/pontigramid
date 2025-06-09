@@ -31,51 +31,123 @@ interface EventRunningTextProps {
   className?: string;
 }
 
-export default function EventRunningText({ 
-  enabled = true, 
-  speed = 50, 
+export default function EventRunningText({
+  enabled = true,
+  speed = 50,
   pauseOnHover = true,
-  className = '' 
+  className = ''
 }: EventRunningTextProps) {
   const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false to show demo immediately
   const [isPaused, setIsPaused] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Demo events that are always available
+  const demoEvents = [
+    {
+      _id: 'demo-1',
+      title: 'Konferensi Teknologi Pontianak 2024',
+      description: 'Event teknologi terbesar di Kalimantan Barat',
+      date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '09:00',
+      location: 'Hotel Mercure Pontianak',
+      category: 'teknologi',
+      organizer: 'Tech Community Pontianak',
+      slug: 'konferensi-teknologi-pontianak-2024',
+      isFeatured: true,
+      price: { amount: 0, currency: 'IDR', isFree: true }
+    },
+    {
+      _id: 'demo-2',
+      title: 'Festival Budaya Dayak',
+      description: 'Perayaan budaya tradisional Kalimantan Barat',
+      date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '16:00',
+      location: 'Taman Alun Kapuas',
+      category: 'budaya',
+      organizer: 'Dinas Kebudayaan Pontianak',
+      slug: 'festival-budaya-dayak',
+      isFeatured: true,
+      price: { amount: 0, currency: 'IDR', isFree: true }
+    },
+    {
+      _id: 'demo-3',
+      title: 'Workshop Digital Marketing',
+      description: 'Belajar strategi pemasaran digital untuk UMKM',
+      date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '13:00',
+      location: 'Gedung DPRD Pontianak',
+      category: 'bisnis',
+      organizer: 'Kamar Dagang Pontianak',
+      slug: 'workshop-digital-marketing',
+      isFeatured: false,
+      price: { amount: 150000, currency: 'IDR', isFree: false }
+    },
+    {
+      _id: 'demo-4',
+      title: 'Seminar Kesehatan Mental Remaja',
+      description: 'Edukasi kesehatan mental untuk remaja',
+      date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '14:00',
+      location: 'Auditorium UNTAN',
+      category: 'kesehatan',
+      organizer: 'Fakultas Kedokteran UNTAN',
+      slug: 'seminar-kesehatan-mental-remaja',
+      isFeatured: true,
+      price: { amount: 0, currency: 'IDR', isFree: true }
+    },
+    {
+      _id: 'demo-5',
+      title: 'Pameran Seni Rupa Kontemporer',
+      description: 'Karya seni rupa kontemporer seniman lokal',
+      date: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '10:00',
+      location: 'Galeri Seni Pontianak',
+      category: 'pameran',
+      organizer: 'Komunitas Seniman Pontianak',
+      slug: 'pameran-seni-rupa-kontemporer',
+      isFeatured: true,
+      price: { amount: 25000, currency: 'IDR', isFree: false }
+    }
+  ];
+
   useEffect(() => {
     if (enabled) {
+      // Set demo events immediately
+      setEvents(demoEvents);
+      // Try to fetch real events in background
       fetchEvents();
     }
   }, [enabled]);
 
   const fetchEvents = async () => {
     try {
-      console.log('EventRunningText: Fetching events...');
+      console.log('EventRunningText: Fetching real events...');
       const response = await fetch('/api/events?featured=true&upcoming=true&limit=10');
       console.log('EventRunningText: Response status:', response.status);
 
       if (!response.ok) {
         console.error('EventRunningText: API response not ok:', response.status, response.statusText);
-        setLoading(false);
+        console.log('EventRunningText: Using demo events only');
         return;
       }
 
       const data = await response.json();
       console.log('EventRunningText: API response data:', data);
 
-      if (data.success && data.data && Array.isArray(data.data)) {
-        console.log('EventRunningText: Setting events:', data.data.length, 'events');
-        setEvents(data.data);
+      if (data.success && data.data && Array.isArray(data.data) && data.data.length > 0) {
+        console.log('EventRunningText: Merging real events with demo events:', data.data.length, 'real events');
+        // Merge real events with demo events for better display
+        setEvents([...data.data, ...demoEvents]);
       } else {
-        console.log('EventRunningText: No events data or invalid format');
-        setEvents([]);
+        console.log('EventRunningText: No real events, using demo events only');
+        // Keep demo events as fallback
       }
     } catch (error) {
       console.error('EventRunningText: Error fetching events:', error);
-      setEvents([]);
-    } finally {
-      setLoading(false);
+      console.log('EventRunningText: Using demo events only');
+      // Keep demo events as fallback
     }
   };
 
@@ -125,78 +197,7 @@ export default function EventRunningText({
     return null;
   }
 
-  if (loading) {
-    return (
-      <div className={`relative overflow-hidden bg-gradient-to-r from-slate-900 via-gray-900 to-slate-900 ${className}`}>
-        <div className="relative z-20 flex items-center justify-between px-6 py-3 border-b border-gray-700/50">
-          <div className="flex items-center space-x-3">
-            <div className="relative">
-              <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-            </div>
-            <div>
-              <h3 className="text-white font-bold text-lg">Event Unggulan</h3>
-              <p className="text-gray-300 text-sm">Memuat event...</p>
-            </div>
-          </div>
-        </div>
-        <div className="py-8 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-        </div>
-      </div>
-    );
-  }
-
-  // If no events, show a demo placeholder
-  if (events.length === 0) {
-    const demoEvents = [
-      {
-        _id: 'demo-1',
-        title: 'Konferensi Teknologi Pontianak 2024',
-        description: 'Event teknologi terbesar di Kalimantan Barat',
-        date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        time: '09:00',
-        location: 'Hotel Mercure Pontianak',
-        category: 'teknologi',
-        organizer: 'Tech Community Pontianak',
-        slug: 'konferensi-teknologi-pontianak-2024',
-        isFeatured: true,
-        price: { amount: 0, currency: 'IDR', isFree: true }
-      },
-      {
-        _id: 'demo-2',
-        title: 'Festival Budaya Dayak',
-        description: 'Perayaan budaya tradisional Kalimantan Barat',
-        date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-        time: '16:00',
-        location: 'Taman Alun Kapuas',
-        category: 'budaya',
-        organizer: 'Dinas Kebudayaan Pontianak',
-        slug: 'festival-budaya-dayak',
-        isFeatured: true,
-        price: { amount: 0, currency: 'IDR', isFree: true }
-      },
-      {
-        _id: 'demo-3',
-        title: 'Workshop Digital Marketing',
-        description: 'Belajar strategi pemasaran digital untuk UMKM',
-        date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
-        time: '13:00',
-        location: 'Gedung DPRD Pontianak',
-        category: 'bisnis',
-        organizer: 'Kamar Dagang Pontianak',
-        slug: 'workshop-digital-marketing',
-        isFeatured: false,
-        price: { amount: 150000, currency: 'IDR', isFree: false }
-      }
-    ];
-
-    console.log('EventRunningText: No events found, showing demo events');
-    return renderEventRunningText([...demoEvents, ...demoEvents]);
-  }
-
+  // Always show the component with available events (demo events are set by default)
   return renderEventRunningText(events);
 
   function renderEventRunningText(eventsToRender: any[]) {
