@@ -9,16 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import ImageUploadWithCompression from '@/components/ImageUploadWithCompression';
-import { 
-  ArrowLeft, 
-  Save, 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  Users, 
-  DollarSign,
+import {
+  ArrowLeft,
+  Save,
+  Calendar,
+  Clock,
+  Users,
   Star,
-  Eye,
   RefreshCw
 } from 'lucide-react';
 
@@ -146,7 +143,7 @@ export default function EditEventPage() {
     }));
   };
 
-  const handleImageSelect = (dataUrl: string, file: File) => {
+  const handleImageSelect = (dataUrl: string) => {
     setFormData(prev => ({
       ...prev,
       imageUrl: dataUrl
