@@ -163,7 +163,8 @@ export async function POST(request: NextRequest) {
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-')
-        .trim();
+        .trim()
+        .replace(/^-|-$/g, '') + '-';
     };
 
     const baseSlug = generateSlug(title);
