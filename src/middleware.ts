@@ -19,6 +19,7 @@ export async function middleware(request: NextRequest) {
     '/api/advertisements',
     '/api/track-visitor',
     '/api/test',
+    '/api/test-simple',
     '/api/test-public-events',
     // Public events API (no authentication required)
     '/api/public-events',
@@ -42,6 +43,7 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith('/api/advertisements') ||
       pathname.startsWith('/api/track-visitor') ||
       pathname.startsWith('/api/public-events') ||
+      pathname.startsWith('/api/test-simple') ||
       pathname.startsWith('/api/test-public-events') ||
       pathname.startsWith('/api/test')) {
     return NextResponse.next();
