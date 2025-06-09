@@ -121,7 +121,14 @@ export async function PUT(request: NextRequest) {
     }
 
     // Reorder team members
-    await TeamMember.reorderMembers(memberIds);
+    const bulkOps = memberIds.map((id: string, index: number) => ({
+      updateOne: {
+        filter: { _id: id },
+        update: { order: index + 1 }
+      }
+    }));
+
+    await TeamMember.bulkWrite(bulkOps);
 
     return NextResponse.json({
       success: true,

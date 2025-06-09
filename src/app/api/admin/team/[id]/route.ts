@@ -7,11 +7,12 @@ import mongoose from 'mongoose';
 // GET - Fetch single team member
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
+    const params = await context.params;
     const { id } = params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -46,7 +47,7 @@ export async function GET(
 // PUT - Update team member
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -60,6 +61,7 @@ export async function PUT(
 
     await connectDB();
 
+    const params = await context.params;
     const { id } = params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -132,7 +134,7 @@ export async function PUT(
 // DELETE - Delete team member
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -146,6 +148,7 @@ export async function DELETE(
 
     await connectDB();
 
+    const params = await context.params;
     const { id } = params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {

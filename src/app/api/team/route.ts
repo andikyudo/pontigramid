@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     // Only return active team members, ordered by their order field
-    const teamMembers = await TeamMember.getActiveMembers();
+    const teamMembers = await TeamMember.find({ isActive: true }).sort({ order: 1 });
 
     return NextResponse.json({
       success: true,

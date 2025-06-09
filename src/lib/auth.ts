@@ -204,3 +204,26 @@ export async function verifyCSRFToken(token: string): Promise<boolean> {
     return false;
   }
 }
+
+// Verify authentication for API routes
+export async function verifyAuth(request: Request): Promise<{ success: boolean; user?: AdminUser; error?: string }> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth-token')?.value;
+
+    if (!token) {
+      return { success: false, error: 'No authentication token found' };
+    }
+
+    const user = await verifyToken(token);
+
+    if (!user) {
+      return { success: false, error: 'Invalid authentication token' };
+    }
+
+    return { success: true, user };
+  } catch (error) {
+    console.error('Error verifying authentication:', error);
+    return { success: false, error: 'Authentication verification failed' };
+  }
+}
