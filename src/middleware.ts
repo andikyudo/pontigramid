@@ -13,7 +13,6 @@ export async function middleware(request: NextRequest) {
   // Public routes that don't require authentication
   const publicRoutes = [
     '/admin/login',
-    // Test routes for debugging
     '/admin/test-news',
     '/admin/test-api',
     '/admin/test',
@@ -30,8 +29,6 @@ export async function middleware(request: NextRequest) {
     try {
       const session = await getSession();
 
-      // Remove temporary bypass - proper authentication required
-
       if (!session) {
         // Redirect to login for admin pages
         if (pathname.startsWith('/admin')) {
@@ -40,10 +37,8 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(loginUrl);
         }
 
-        // Return 401 for API routes (except test routes)
+        // Return 401 for API routes
         if (pathname.startsWith('/api/admin/')) {
-          // Remove temporary bypass - proper authentication required
-
           return NextResponse.json(
             { success: false, error: 'Authentication required' },
             { status: 401 }
@@ -65,7 +60,6 @@ export async function middleware(request: NextRequest) {
         }
       }
 
-      console.log('Middleware: Authenticated access to', pathname, 'by', session?.username);
       return NextResponse.next();
 
     } catch (error) {

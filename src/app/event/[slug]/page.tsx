@@ -52,6 +52,105 @@ interface EventPageProps {
   params: Promise<{ slug: string }>;
 }
 
+// Demo events that match EventRunningText component
+const getDemoEvent = (slug: string) => {
+  const demoEvents = [
+    {
+      _id: 'demo-1',
+      title: 'Konferensi Teknologi Pontianak 2024',
+      description: 'Event teknologi terbesar di Kalimantan Barat dengan pembicara dari berbagai perusahaan teknologi terkemuka. Dapatkan insight terbaru tentang perkembangan teknologi dan networking dengan para profesional.',
+      date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '09:00',
+      location: 'Hotel Mercure Pontianak',
+      category: 'teknologi',
+      organizer: 'Tech Community Pontianak',
+      slug: 'konferensi-teknologi-pontianak-2024',
+      isFeatured: true,
+      isActive: true,
+      price: { amount: 0, currency: 'IDR', isFree: true },
+      contact: {
+        email: 'info@techpontianak.com',
+        phone: '+62 561 123456',
+        website: 'https://techpontianak.com'
+      }
+    },
+    {
+      _id: 'demo-2',
+      title: 'Festival Kuliner Nusantara',
+      description: 'Nikmati berbagai kuliner khas Nusantara dalam satu tempat. Festival kuliner terbesar di Pontianak dengan lebih dari 100 stand makanan dan minuman tradisional.',
+      date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '16:00',
+      location: 'Taman Alun Kapuas',
+      category: 'kuliner',
+      organizer: 'Dinas Pariwisata Pontianak',
+      slug: 'festival-kuliner-nusantara',
+      isFeatured: true,
+      isActive: true,
+      price: { amount: 15000, currency: 'IDR', isFree: false },
+      contact: {
+        email: 'festival@pontianak.go.id',
+        phone: '+62 561 654321'
+      }
+    },
+    {
+      _id: 'demo-3',
+      title: 'Workshop Fotografi Landscape',
+      description: 'Belajar teknik fotografi landscape dari fotografer profesional. Workshop intensif selama 2 hari dengan praktek langsung di lokasi-lokasi menarik di sekitar Pontianak.',
+      date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '08:00',
+      location: 'Studio Foto Kreatif',
+      category: 'workshop',
+      organizer: 'Komunitas Fotografer Pontianak',
+      slug: 'workshop-fotografi-landscape',
+      isFeatured: false,
+      isActive: true,
+      price: { amount: 250000, currency: 'IDR', isFree: false },
+      contact: {
+        email: 'workshop@fotografi-ptk.com',
+        phone: '+62 561 789012'
+      }
+    },
+    {
+      _id: 'demo-4',
+      title: 'Konser Musik Tradisional',
+      description: 'Pertunjukan musik tradisional Kalimantan Barat dengan berbagai alat musik khas daerah. Saksikan penampilan dari grup musik terbaik se-Kalbar.',
+      date: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '19:30',
+      location: 'Gedung Kesenian Pontianak',
+      category: 'musik',
+      organizer: 'Sanggar Seni Budaya Kalbar',
+      slug: 'konser-musik-tradisional',
+      isFeatured: true,
+      isActive: true,
+      price: { amount: 50000, currency: 'IDR', isFree: false },
+      contact: {
+        email: 'konser@budayakalbar.org',
+        phone: '+62 561 345678'
+      }
+    },
+    {
+      _id: 'demo-5',
+      title: 'Pameran Seni Rupa Kontemporer',
+      description: 'Karya seni rupa kontemporer dari seniman lokal dan nasional. Pameran ini menampilkan berbagai medium seni dari lukisan, patung, hingga instalasi digital.',
+      date: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),
+      time: '10:00',
+      location: 'Galeri Seni Pontianak',
+      category: 'pameran',
+      organizer: 'Komunitas Seniman Pontianak',
+      slug: 'pameran-seni-rupa-kontemporer',
+      isFeatured: true,
+      isActive: true,
+      price: { amount: 25000, currency: 'IDR', isFree: false },
+      contact: {
+        email: 'pameran@seniman-ptk.com',
+        phone: '+62 561 456789'
+      }
+    }
+  ];
+
+  return demoEvents.find(event => event.slug === slug) || null;
+};
+
 async function getEvent(slug: string) {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
@@ -65,21 +164,38 @@ async function getEvent(slug: string) {
       },
     });
 
-    if (!response.ok) {
-      console.error(`Failed to fetch event: ${response.status} ${response.statusText}`);
-      return null;
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        return data.data;
+      }
     }
 
-    const data = await response.json();
+    // If API fails or event not found, try demo events as fallback
+    console.log('Trying demo event fallback for slug:', slug);
+    const demoEvent = getDemoEvent(slug);
 
-    if (!data.success) {
-      console.error('API returned error:', data.error);
-      return null;
+    if (demoEvent) {
+      // Format demo event to match API response structure
+      return {
+        event: demoEvent,
+        relatedEvents: []
+      };
     }
 
-    return data.data;
+    return null;
   } catch (error) {
     console.error('Error fetching event:', error);
+
+    // Try demo events as fallback on error
+    const demoEvent = getDemoEvent(slug);
+    if (demoEvent) {
+      return {
+        event: demoEvent,
+        relatedEvents: []
+      };
+    }
+
     return null;
   }
 }
