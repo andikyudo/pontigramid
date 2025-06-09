@@ -5,19 +5,8 @@ import { getSession } from '@/lib/auth';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for public API routes entirely
-  if (pathname.startsWith('/api/public-events') ||
-      pathname.startsWith('/api/events') ||
-      pathname.startsWith('/api/news') ||
-      pathname.startsWith('/api/categories') ||
-      pathname.startsWith('/api/team') ||
-      pathname.startsWith('/api/advertisements') ||
-      pathname.startsWith('/api/track-visitor') ||
-      pathname.startsWith('/api/test') ||
-      pathname.startsWith('/api/upload') ||
-      pathname === '/api/auth/login' ||
-      pathname === '/api/auth/csrf' ||
-      pathname === '/api/auth/logout') {
+  // Only apply middleware to admin routes
+  if (!pathname.startsWith('/admin') && !pathname.startsWith('/api/admin/')) {
     return NextResponse.next();
   }
 
@@ -100,6 +89,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api/public-events|api/events|api/news|api/categories|api/team|api/advertisements|api/track-visitor|api/test|api/upload|_next/static|_next/image|favicon.ico).*)',
+    '/admin/:path*',
+    '/api/admin/:path*'
   ]
 };
