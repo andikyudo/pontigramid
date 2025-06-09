@@ -244,21 +244,7 @@ function HomeContent() {
           <TrendingNews />
           <HorizontalNewsCards />
 
-          {/* Featured Events Section */}
-          <section className="py-8 sm:py-12 bg-gray-50">
-            <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-              <div className="text-center mb-6 sm:mb-8 lg:mb-10">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-                  Event Unggulan
-                </h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
-                  Jangan lewatkan event-event menarik yang akan datang
-                </p>
-                <div className="mt-3 sm:mt-4 w-16 sm:w-24 h-1 bg-blue-500 mx-auto rounded-full"></div>
-              </div>
-              <EventCards featured={true} limit={6} />
-            </div>
-          </section>
+
 
           <PopularCategories />
         </>
