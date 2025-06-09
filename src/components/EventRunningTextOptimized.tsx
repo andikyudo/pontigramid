@@ -206,15 +206,19 @@ export default function EventRunningTextOptimized({
 
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
-      teknologi: 'from-blue-500 to-cyan-500',
-      budaya: 'from-orange-500 to-yellow-500',
-      bisnis: 'from-green-500 to-emerald-500',
-      kesehatan: 'from-red-500 to-pink-500',
-      pendidikan: 'from-indigo-500 to-purple-500',
-      olahraga: 'from-red-600 to-orange-600',
-      hiburan: 'from-pink-500 to-purple-500',
-      pameran: 'from-amber-500 to-orange-500',
-      lainnya: 'from-gray-500 to-slate-500'
+      teknologi: 'from-blue-600 to-blue-700',
+      budaya: 'from-orange-600 to-red-600',
+      bisnis: 'from-emerald-600 to-green-700',
+      kesehatan: 'from-red-600 to-red-700',
+      pendidikan: 'from-purple-600 to-indigo-700',
+      olahraga: 'from-red-700 to-orange-700',
+      hiburan: 'from-pink-600 to-purple-700',
+      pameran: 'from-amber-600 to-orange-700',
+      konferensi: 'from-blue-700 to-indigo-700',
+      seminar: 'from-green-600 to-emerald-700',
+      workshop: 'from-purple-700 to-pink-700',
+      festival: 'from-yellow-600 to-orange-600',
+      lainnya: 'from-gray-600 to-slate-700'
     };
     return colors[category] || colors.lainnya;
   };
@@ -226,7 +230,7 @@ export default function EventRunningTextOptimized({
   const currentEvent = events[currentIndex];
 
   return (
-    <div className={`relative overflow-hidden bg-gradient-to-r from-slate-700/80 via-gray-700/80 to-slate-700/80 backdrop-blur-sm border-b border-gray-600/30 ${className}`}>
+    <div className={`relative overflow-hidden bg-gradient-to-r from-red-600/90 via-red-700/90 to-red-800/90 backdrop-blur-sm border-b border-red-500/30 ${className}`}>
       {/* Compact Mobile-Optimized Container */}
       <div 
         className="relative"
@@ -236,7 +240,7 @@ export default function EventRunningTextOptimized({
       >
         {/* Event Content - Compact Design */}
         <div className="flex items-center px-4 py-3 sm:py-4">
-          {/* Event Image - Smaller on Mobile */}
+          {/* Event Image - Dynamic Images Priority */}
           <div className="flex-shrink-0 mr-3 sm:mr-4">
             <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden">
               {currentEvent.imageUrl && !imageErrors[currentEvent._id] ? (
@@ -258,15 +262,35 @@ export default function EventRunningTextOptimized({
                   />
                 )
               ) : (
-                <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(currentEvent.category)} flex items-center justify-center`}>
-                  <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-white/80" />
+                // Dynamic gradient background instead of calendar icon
+                <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(currentEvent.category)} flex items-center justify-center relative`}>
+                  {/* Category-specific icon instead of calendar */}
+                  <div className="text-white/90 text-lg sm:text-xl font-bold">
+                    {currentEvent.category === 'teknologi' && '💻'}
+                    {currentEvent.category === 'budaya' && '🎭'}
+                    {currentEvent.category === 'bisnis' && '💼'}
+                    {currentEvent.category === 'kesehatan' && '🏥'}
+                    {currentEvent.category === 'pendidikan' && '🎓'}
+                    {currentEvent.category === 'olahraga' && '⚽'}
+                    {currentEvent.category === 'hiburan' && '🎪'}
+                    {currentEvent.category === 'pameran' && '🖼️'}
+                    {currentEvent.category === 'konferensi' && '🎤'}
+                    {currentEvent.category === 'seminar' && '📚'}
+                    {currentEvent.category === 'workshop' && '🔧'}
+                    {currentEvent.category === 'festival' && '🎉'}
+                    {!['teknologi', 'budaya', 'bisnis', 'kesehatan', 'pendidikan', 'olahraga', 'hiburan', 'pameran', 'konferensi', 'seminar', 'workshop', 'festival'].includes(currentEvent.category) && '📅'}
+                  </div>
+                  {/* Subtle pattern overlay */}
+                  <div className="absolute inset-0 bg-white/10 bg-opacity-20" style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='10' cy='10' r='1'/%3E%3C/g%3E%3C/svg%3E")`
+                  }}></div>
                 </div>
               )}
-              
+
               {/* Featured Badge */}
               {currentEvent.isFeatured && (
                 <div className="absolute -top-1 -right-1">
-                  <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                  <Star className="w-3 h-3 text-yellow-400 fill-current drop-shadow-sm" />
                 </div>
               )}
             </div>
@@ -296,8 +320,8 @@ export default function EventRunningTextOptimized({
                 </div>
 
                 <div className="mt-1 flex items-center space-x-2">
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${getCategoryColor(currentEvent.category)} text-white`}>
-                    {currentEvent.category}
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${getCategoryColor(currentEvent.category)} text-white shadow-sm`}>
+                    {currentEvent.category.charAt(0).toUpperCase() + currentEvent.category.slice(1)}
                   </span>
                   <span className="text-xs text-gray-400">
                     {getDaysUntilEvent(currentEvent.date)}

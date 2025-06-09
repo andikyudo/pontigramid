@@ -342,6 +342,13 @@ export default function AdminDashboard() {
                     <span>Kategori</span>
                   </Link>
                   <Link
+                    href="/admin/events"
+                    className="w-full bg-cyan-600 text-white px-4 py-3 rounded-lg text-center hover:bg-cyan-700 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <span>📅</span>
+                    <span>Kelola Event</span>
+                  </Link>
+                  <Link
                     href="/admin/analytics"
                     className="w-full bg-orange-600 text-white px-4 py-3 rounded-lg text-center hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
                   >
