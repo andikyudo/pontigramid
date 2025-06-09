@@ -11,6 +11,14 @@ export async function middleware(request: NextRequest) {
     '/api/auth/login',
     '/api/auth/csrf',
     '/api/auth/logout',
+    // Public API routes
+    '/api/events',
+    '/api/news',
+    '/api/categories',
+    '/api/team',
+    '/api/advertisements',
+    '/api/track-visitor',
+    '/api/test',
     // Test routes for debugging
     '/admin/test-news',
     '/admin/test-api',
@@ -20,6 +28,17 @@ export async function middleware(request: NextRequest) {
 
   // Check if the route is public
   if (publicRoutes.includes(pathname)) {
+    return NextResponse.next();
+  }
+
+  // Allow public API routes with query parameters
+  if (pathname.startsWith('/api/events') ||
+      pathname.startsWith('/api/news') ||
+      pathname.startsWith('/api/categories') ||
+      pathname.startsWith('/api/team') ||
+      pathname.startsWith('/api/advertisements') ||
+      pathname.startsWith('/api/track-visitor') ||
+      pathname.startsWith('/api/test')) {
     return NextResponse.next();
   }
 
