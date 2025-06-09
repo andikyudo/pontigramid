@@ -51,14 +51,29 @@ export default function EventRunningText({
 
   const fetchEvents = async () => {
     try {
+      console.log('EventRunningText: Fetching events...');
       const response = await fetch('/api/events?featured=true&upcoming=true&limit=10');
+      console.log('EventRunningText: Response status:', response.status);
+
+      if (!response.ok) {
+        console.error('EventRunningText: API response not ok:', response.status, response.statusText);
+        setLoading(false);
+        return;
+      }
+
       const data = await response.json();
-      
-      if (data.success && data.data) {
+      console.log('EventRunningText: API response data:', data);
+
+      if (data.success && data.data && Array.isArray(data.data)) {
+        console.log('EventRunningText: Setting events:', data.data.length, 'events');
         setEvents(data.data);
+      } else {
+        console.log('EventRunningText: No events data or invalid format');
+        setEvents([]);
       }
     } catch (error) {
-      console.error('Error fetching events:', error);
+      console.error('EventRunningText: Error fetching events:', error);
+      setEvents([]);
     } finally {
       setLoading(false);
     }
@@ -106,14 +121,89 @@ export default function EventRunningText({
     return colors[category] || colors.lainnya;
   };
 
-  if (!enabled || loading || events.length === 0) {
+  if (!enabled) {
     return null;
   }
 
-  // Duplicate events for seamless scrolling
-  const duplicatedEvents = [...events, ...events];
+  if (loading) {
+    return (
+      <div className={`relative overflow-hidden bg-gradient-to-r from-slate-900 via-gray-900 to-slate-900 ${className}`}>
+        <div className="relative z-20 flex items-center justify-between px-6 py-3 border-b border-gray-700/50">
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+            </div>
+            <div>
+              <h3 className="text-white font-bold text-lg">Event Unggulan</h3>
+              <p className="text-gray-300 text-sm">Memuat event...</p>
+            </div>
+          </div>
+        </div>
+        <div className="py-8 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+        </div>
+      </div>
+    );
+  }
 
-  return (
+  // If no events, show a demo placeholder
+  if (events.length === 0) {
+    const demoEvents = [
+      {
+        _id: 'demo-1',
+        title: 'Konferensi Teknologi Pontianak 2024',
+        description: 'Event teknologi terbesar di Kalimantan Barat',
+        date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        time: '09:00',
+        location: 'Hotel Mercure Pontianak',
+        category: 'teknologi',
+        organizer: 'Tech Community Pontianak',
+        slug: 'konferensi-teknologi-pontianak-2024',
+        isFeatured: true,
+        price: { amount: 0, currency: 'IDR', isFree: true }
+      },
+      {
+        _id: 'demo-2',
+        title: 'Festival Budaya Dayak',
+        description: 'Perayaan budaya tradisional Kalimantan Barat',
+        date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        time: '16:00',
+        location: 'Taman Alun Kapuas',
+        category: 'budaya',
+        organizer: 'Dinas Kebudayaan Pontianak',
+        slug: 'festival-budaya-dayak',
+        isFeatured: true,
+        price: { amount: 0, currency: 'IDR', isFree: true }
+      },
+      {
+        _id: 'demo-3',
+        title: 'Workshop Digital Marketing',
+        description: 'Belajar strategi pemasaran digital untuk UMKM',
+        date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+        time: '13:00',
+        location: 'Gedung DPRD Pontianak',
+        category: 'bisnis',
+        organizer: 'Kamar Dagang Pontianak',
+        slug: 'workshop-digital-marketing',
+        isFeatured: false,
+        price: { amount: 150000, currency: 'IDR', isFree: false }
+      }
+    ];
+
+    console.log('EventRunningText: No events found, showing demo events');
+    return renderEventRunningText([...demoEvents, ...demoEvents]);
+  }
+
+  return renderEventRunningText(events);
+
+  function renderEventRunningText(eventsToRender: any[]) {
+    // Duplicate events for seamless scrolling
+    const duplicatedEvents = [...eventsToRender, ...eventsToRender];
+
+    return (
     <div className={`relative overflow-hidden bg-gradient-to-r from-slate-900 via-gray-900 to-slate-900 ${className}`}>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
@@ -291,5 +381,6 @@ export default function EventRunningText({
         }
       `}</style>
     </div>
-  );
+    );
+  }
 }

@@ -130,18 +130,18 @@ function HomeContent() {
       {/* Breaking News Slider */}
       <BreakingNewsSlider />
 
-      {/* Header Advertisement */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-2">
-        <AdDisplay zone="header" limit={1} className="mb-4" />
-      </div>
-
-      {/* Event Running Text - Strategic Placement */}
+      {/* Event Running Text - Above Everything */}
       <EventRunningText
         enabled={true}
         speed={60}
         pauseOnHover={true}
-        className="mb-6"
+        className="mb-4"
       />
+
+      {/* Header Advertisement */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-2">
+        <AdDisplay zone="header" limit={1} className="mb-4" />
+      </div>
 
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8">
         {/* Hero Section - Simplified for mobile */}
