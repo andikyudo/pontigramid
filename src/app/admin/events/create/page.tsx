@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/admin/AdminLayout';
+import AdminAuth from '@/components/admin/AdminAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import ImageUploadWithCompression from '@/components/ImageUploadWithCompression';
 import { 
   ArrowLeft, 
   Save, 
@@ -24,6 +26,7 @@ export default function CreateEventPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [compressedImageFile, setCompressedImageFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -62,27 +65,9 @@ export default function CreateEventPage() {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
-        return;
-      }
-      
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image size should be less than 5MB');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleImageSelect = (dataUrl: string, file: File) => {
+    setImagePreview(dataUrl);
+    setCompressedImageFile(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,10 +82,9 @@ export default function CreateEventPage() {
         submitData.append(key, value.toString());
       });
 
-      // Add image if selected
-      const imageInput = document.getElementById('image') as HTMLInputElement;
-      if (imageInput?.files?.[0]) {
-        submitData.append('image', imageInput.files[0]);
+      // Add compressed image if selected
+      if (compressedImageFile) {
+        submitData.append('image', compressedImageFile);
       }
 
       const response = await fetch('/api/admin/events', {
@@ -125,7 +109,8 @@ export default function CreateEventPage() {
   };
 
   return (
-    <AdminLayout>
+    <AdminAuth>
+      <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -359,37 +344,21 @@ export default function CreateEventPage() {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Image Upload */}
+              {/* Image Upload with Compression */}
               <div className="bg-white p-6 rounded-lg shadow-sm border">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Gambar Event</h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Gambar
-                    </label>
-                    <input
-                      type="file"
-                      id="image"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Format: JPG, PNG, WebP. Maksimal 5MB.
-                    </p>
-                  </div>
 
-                  {imagePreview && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-full h-48 object-cover rounded-lg border"
-                      />
-                    </div>
-                  )}
+                <div className="space-y-4">
+                  <ImageUploadWithCompression
+                    onImageSelect={handleImageSelect}
+                    imageType="featured"
+                    currentImage={imagePreview || undefined}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Gambar akan dikompres otomatis untuk performa optimal.
+                    Format yang didukung: JPG, PNG, WebP.
+                  </p>
                 </div>
               </div>
 
@@ -496,6 +465,7 @@ export default function CreateEventPage() {
           </div>
         </form>
       </div>
-    </AdminLayout>
+      </AdminLayout>
+    </AdminAuth>
   );
 }

@@ -206,19 +206,19 @@ export default function EventRunningTextOptimized({
 
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
-      teknologi: 'from-blue-600 to-blue-700',
-      budaya: 'from-orange-600 to-red-600',
-      bisnis: 'from-emerald-600 to-green-700',
-      kesehatan: 'from-red-600 to-red-700',
-      pendidikan: 'from-purple-600 to-indigo-700',
-      olahraga: 'from-red-700 to-orange-700',
-      hiburan: 'from-pink-600 to-purple-700',
-      pameran: 'from-amber-600 to-orange-700',
-      konferensi: 'from-blue-700 to-indigo-700',
-      seminar: 'from-green-600 to-emerald-700',
-      workshop: 'from-purple-700 to-pink-700',
-      festival: 'from-yellow-600 to-orange-600',
-      lainnya: 'from-gray-600 to-slate-700'
+      teknologi: 'from-blue-500 to-cyan-600',
+      budaya: 'from-orange-500 to-red-500',
+      bisnis: 'from-emerald-500 to-teal-600',
+      kesehatan: 'from-red-500 to-pink-600',
+      pendidikan: 'from-purple-500 to-violet-600',
+      olahraga: 'from-orange-500 to-red-600',
+      hiburan: 'from-pink-500 to-purple-600',
+      pameran: 'from-amber-500 to-yellow-600',
+      konferensi: 'from-indigo-500 to-blue-600',
+      seminar: 'from-green-500 to-emerald-600',
+      workshop: 'from-violet-500 to-purple-600',
+      festival: 'from-yellow-500 to-orange-500',
+      lainnya: 'from-slate-500 to-gray-600'
     };
     return colors[category] || colors.lainnya;
   };
@@ -230,7 +230,7 @@ export default function EventRunningTextOptimized({
   const currentEvent = events[currentIndex];
 
   return (
-    <div className={`relative overflow-hidden bg-gradient-to-r from-red-600/90 via-red-700/90 to-red-800/90 backdrop-blur-sm border-b border-red-500/30 ${className}`}>
+    <div className={`relative overflow-hidden bg-gradient-to-r from-slate-800 via-slate-900 to-black backdrop-blur-sm border-b border-slate-600/50 ${className}`}>
       {/* Compact Mobile-Optimized Container */}
       <div 
         className="relative"
