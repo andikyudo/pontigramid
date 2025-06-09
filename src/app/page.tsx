@@ -10,7 +10,7 @@ import TrendingNews from '@/components/TrendingNews';
 import HorizontalNewsCards from '@/components/HorizontalNewsCards';
 import PopularCategories from '@/components/PopularCategories';
 import AdDisplay from '@/components/AdDisplay';
-import EventCards from '@/components/EventCards';
+
 import EventRunningTextOptimized from '@/components/EventRunningTextOptimized';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -201,10 +201,33 @@ function HomeContent() {
                   {/* Sidebar Advertisement */}
                   <AdDisplay zone="sidebar" limit={2} />
 
-                  {/* Featured Events */}
+                  {/* Additional Sidebar Content */}
                   <div className="bg-white rounded-lg shadow-md p-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4">Event Mendatang</h3>
-                    <EventCards featured={true} limit={3} className="space-y-4" />
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Ikuti Kami</h3>
+                    <div className="space-y-3">
+                      <a
+                        href="https://facebook.com/pontigram"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-3 text-gray-600 hover:text-blue-600 transition-colors"
+                      >
+                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">f</span>
+                        </div>
+                        <span>Facebook</span>
+                      </a>
+                      <a
+                        href="https://instagram.com/pontigram"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-3 text-gray-600 hover:text-pink-600 transition-colors"
+                      >
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">@</span>
+                        </div>
+                        <span>Instagram</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>

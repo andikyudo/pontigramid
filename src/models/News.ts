@@ -38,7 +38,7 @@ const NewsSchema = new Schema<INews>({
   category: {
     type: String,
     required: [true, 'Kategori wajib dipilih'],
-    enum: ['politik', 'ekonomi', 'olahraga', 'teknologi', 'hiburan', 'kesehatan', 'pendidikan', 'umum', 'hukum']
+    enum: ['politik', 'ekonomi', 'olahraga', 'teknologi', 'hiburan', 'kesehatan', 'pendidikan', 'umum', 'hukum', 'sosial', 'budaya']
   },
   author: {
     type: String,

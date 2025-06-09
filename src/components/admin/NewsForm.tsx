@@ -142,6 +142,8 @@ export default function NewsForm({ initialData, isEdit = false, newsId }: NewsFo
     { value: 'hiburan', label: 'Hiburan' },
     { value: 'kesehatan', label: 'Kesehatan' },
     { value: 'pendidikan', label: 'Pendidikan' },
+    { value: 'sosial', label: 'Sosial' },
+    { value: 'budaya', label: 'Budaya' },
     { value: 'umum', label: 'Umum' }
   ];
 

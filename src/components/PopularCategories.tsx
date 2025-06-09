@@ -13,7 +13,9 @@ import {
   Globe,
   ArrowRight,
   Loader2,
-  Scale
+  Scale,
+  Users,
+  Palette
 } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { useCategoryCounts } from '@/hooks/useNews';
@@ -93,6 +95,24 @@ const categoriesConfig: CategoryData[] = [
     count: 0
   },
   {
+    id: 'sosial',
+    name: 'Sosial',
+    description: 'Berita sosial dan kemasyarakatan',
+    icon: Users,
+    color: 'text-teal-600',
+    bgColor: 'bg-teal-50 hover:bg-teal-100',
+    count: 0
+  },
+  {
+    id: 'budaya',
+    name: 'Budaya',
+    description: 'Berita budaya dan tradisi lokal',
+    icon: Palette,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50 hover:bg-orange-100',
+    count: 0
+  },
+  {
     id: 'umum',
     name: 'Umum',
     description: 'Berita umum dan informasi lainnya',
@@ -131,7 +151,8 @@ export default function PopularCategories() {
     Heart: Heart,
     BookOpen: GraduationCap,
     Globe: Globe,
-    Scale: Scale
+    Scale: Scale,
+    Palette: Palette
   };
 
   // Transform categories to include proper icon components

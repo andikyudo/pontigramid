@@ -76,7 +76,7 @@ export default function EventRunningTextOptimized({
       setHasError(false);
 
       console.log('EventRunningTextOptimized: Fetching events from /api/events...');
-      const response = await fetch('/api/events?featured=true&upcoming=true&limit=10');
+      const response = await fetch('/api/events?upcoming=true&limit=10');
       console.log('EventRunningTextOptimized: Response status:', response.status);
       console.log('EventRunningTextOptimized: Response headers:', Object.fromEntries(response.headers.entries()));
 

@@ -15,6 +15,8 @@ const categories = [
   { id: 'hiburan', name: 'Hiburan' },
   { id: 'kesehatan', name: 'Kesehatan' },
   { id: 'pendidikan', name: 'Pendidikan' },
+  { id: 'sosial', name: 'Sosial' },
+  { id: 'budaya', name: 'Budaya' },
   { id: 'umum', name: 'Umum' },
   { id: 'hukum', name: 'Hukum' }
 ];
