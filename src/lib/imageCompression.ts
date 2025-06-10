@@ -391,7 +391,9 @@ export async function compressImages(
           originalSize: file.size,
           compressedSize: file.size,
           compressionRatio: 0,
-          dataUrl: URL.createObjectURL(file)
+          dataUrl: URL.createObjectURL(file),
+          format: 'jpeg', // Default fallback format
+          webpSupported: false // Fallback doesn't use WebP
         });
       }
     }
