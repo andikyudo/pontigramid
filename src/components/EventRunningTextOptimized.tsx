@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Calendar, Clock, MapPin, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import ProgressiveImage from '@/components/ProgressiveImage';
+import { useImagePreloader, generateResponsiveSizes } from '@/hooks/useImagePreloader';
 
 interface Event {
   _id: string;
@@ -46,6 +47,17 @@ export default function EventRunningTextOptimized({
   // State for loading and error handling
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+
+  // Preload critical event images
+  const eventImageUrls = events
+    .filter(event => event.imageUrl && !event.imageUrl.startsWith('data:'))
+    .map(event => event.imageUrl!)
+    .slice(0, 3); // Preload first 3 images
+
+  const { loaded: imagesPreloaded } = useImagePreloader(eventImageUrls, {
+    priority: 'high',
+    timeout: 8000
+  });
 
   useEffect(() => {
     if (enabled) {
@@ -308,14 +320,15 @@ export default function EventRunningTextOptimized({
                     loading="lazy"
                   />
                 ) : (
-                  <Image
+                  <ProgressiveImage
                     src={currentEvent.imageUrl}
                     alt={currentEvent.title}
                     fill
                     className="object-cover object-center"
-                    sizes="(max-width: 640px) 48px, 64px"
+                    sizes={generateResponsiveSizes({ mobile: 12, tablet: 8, desktop: 6 })}
                     onError={() => handleImageError(currentEvent._id)}
-                    priority={false}
+                    priority={imagesPreloaded && currentIndex < 3}
+                    quality={90}
                   />
                 )
               ) : (

@@ -1,6 +1,7 @@
 /**
- * Image compression utility for PontigramID
+ * Advanced Image compression utility for PontigramID
  * Automatically compresses images to optimize file size while maintaining quality
+ * Supports WebP format detection and progressive loading optimization
  */
 
 export interface CompressionOptions {
@@ -17,6 +18,78 @@ export interface CompressionResult {
   compressedSize: number;
   compressionRatio: number;
   dataUrl: string;
+  format: string;
+  webpSupported: boolean;
+}
+
+/**
+ * Detect the best image format based on browser support and image characteristics
+ */
+async function detectBestFormat(file: File, preferredFormat?: string): Promise<'jpeg' | 'png' | 'webp'> {
+  // Check WebP support
+  const supportsWebP = (() => {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+    } catch {
+      return false;
+    }
+  })();
+
+  // If preferred format is specified and supported, use it
+  if (preferredFormat === 'webp' && supportsWebP) {
+    return 'webp';
+  }
+
+  // Auto-detect best format
+  if (supportsWebP) {
+    // WebP is supported, check if image has transparency
+    if (file.type === 'image/png') {
+      // For PNG files, check if they have transparency
+      const hasTransparency = await checkImageTransparency(file);
+      return hasTransparency ? 'png' : 'webp'; // Keep PNG for transparency, use WebP otherwise
+    }
+    return 'webp'; // Use WebP for all other cases
+  }
+
+  // Fallback to JPEG for most cases, PNG for transparency
+  return file.type === 'image/png' ? 'png' : 'jpeg';
+}
+
+/**
+ * Check if PNG image has transparency
+ */
+async function checkImageTransparency(file: File): Promise<boolean> {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        // Check alpha channel
+        for (let i = 3; i < data.length; i += 4) {
+          if (data[i] < 255) {
+            resolve(true); // Has transparency
+            return;
+          }
+        }
+      }
+      resolve(false); // No transparency
+    };
+
+    img.onerror = () => resolve(false);
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 /**
@@ -26,12 +99,15 @@ export async function compressImage(
   file: File,
   options: CompressionOptions = {}
 ): Promise<CompressionResult> {
+  // Auto-detect best format based on browser support and image content
+  const bestFormat = await detectBestFormat(file, options.format);
+
   const {
     maxWidth = 1200,
     maxHeight = 800,
-    quality = 0.8,
+    quality = bestFormat === 'webp' ? 0.85 : 0.8, // WebP can use higher quality
     maxSizeKB = 500,
-    format = 'jpeg'
+    format = bestFormat
   } = options;
 
   return new Promise((resolve, reject) => {
@@ -80,7 +156,9 @@ export async function compressImage(
                 originalSize: file.size,
                 compressedSize: compressedFile.size,
                 compressionRatio: (1 - compressedFile.size / file.size) * 100,
-                dataUrl: result.dataUrl
+                dataUrl: result.dataUrl,
+                format: format,
+                webpSupported: format === 'webp'
               });
             })
             .catch(reject);
