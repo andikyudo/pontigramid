@@ -67,11 +67,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('POST body received:', body);
 
-    // ALWAYS ATTEMPT TRACKING - No conditionals
+    // NEW ANALYTICS SYSTEM - Always attempt tracking
     try {
       // Import dependencies dynamically
       const { connectDB } = await import('@/lib/mongodb');
-      const ArticleView = (await import('@/models/ArticleView')).default;
+      const ReaderAnalytics = (await import('@/models/ReaderAnalytics')).default;
       const News = (await import('@/models/News')).default;
 
       await connectDB();
@@ -90,39 +90,44 @@ export async function POST(request: NextRequest) {
         console.log('Article lookup error:', err);
       }
 
-      // Create view record
-      const viewRecord = new ArticleView({
-        articleId: article ? (article as any)._id : '507f1f77bcf86cd799439011',
-        articleSlug: articleSlug,
-        articleTitle: article ? (article as any).title : 'Test Article',
-        articleCategory: article ? (article as any).category : 'test',
-        articleAuthor: article ? (article as any).author : 'Test Author',
-        visitorId: body.visitorId || 'test-visitor-' + Date.now(),
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1',
-        userAgent: request.headers.get('user-agent') || 'Unknown',
-        sessionId: body.sessionId || 'test-session-' + Date.now(),
-        viewDuration: body.viewDuration || 30,
-        isUniqueView: true,
-        location: {
-          country: 'Indonesia',
-          region: 'Kalimantan Barat',
-          city: 'Pontianak',
-          district: 'Pontianak Kota'
-        },
-        device: {
-          type: 'desktop',
-          os: 'Production OS',
-          browser: 'Production Browser'
-        },
-        viewedAt: new Date()
+      // Get client information
+      const ipAddress = request.headers.get('x-forwarded-for') ||
+                       request.headers.get('x-real-ip') ||
+                       '127.0.0.1';
+      const userAgent = request.headers.get('user-agent') || 'Unknown';
+
+      // Check for unique view (same IP + article within 24 hours)
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const existingView = await ReaderAnalytics.findOne({
+        articleSlug,
+        ipAddress,
+        viewedAt: { $gte: twentyFourHoursAgo }
       });
 
-      await viewRecord.save();
-      console.log('View record saved with ID:', viewRecord._id);
+      const isUniqueView = !existingView;
+      console.log('Is unique view:', isUniqueView);
 
-      // Update article view count if real article
+      // Create analytics record using new schema
+      const analyticsRecord = new ReaderAnalytics({
+        articleSlug: articleSlug,
+        articleTitle: article ? (article as any).title : 'Test Article',
+        ipAddress,
+        userAgent,
+        country: 'Indonesia',
+        region: 'Kalimantan Barat',
+        city: 'Pontianak',
+        viewedAt: new Date(),
+        isUniqueView,
+        sessionId: body.sessionId || 'test-session-' + Date.now(),
+        referrer: body.referrer || ''
+      });
+
+      await analyticsRecord.save();
+      console.log('Analytics record saved with ID:', analyticsRecord._id);
+
+      // Update article view count if real article and unique view
       let updatedArticle = null;
-      if (article) {
+      if (article && isUniqueView) {
         updatedArticle = await News.findByIdAndUpdate(
           (article as any)._id,
           { $inc: { views: 1 } },
@@ -132,34 +137,43 @@ export async function POST(request: NextRequest) {
       }
 
       // Get current counts for verification
-      const totalViews = await ArticleView.countDocuments();
-      const articleViews = await ArticleView.countDocuments({
-        articleId: article ? (article as any)._id : viewRecord.articleId
+      const totalViews = await ReaderAnalytics.countDocuments();
+      const articleViews = await ReaderAnalytics.countDocuments({
+        articleSlug: articleSlug
+      });
+      const uniqueViews = await ReaderAnalytics.countDocuments({
+        articleSlug: articleSlug,
+        isUniqueView: true
       });
 
       return NextResponse.json({
         success: true,
-        message: 'View tracking successful - FORCED EXECUTION',
+        message: 'NEW ANALYTICS SYSTEM - Tracking successful!',
         data: {
-          viewId: viewRecord._id,
-          articleSlug: viewRecord.articleSlug,
-          articleTitle: viewRecord.articleTitle,
-          ipAddress: viewRecord.ipAddress.substring(0, 8) + '***',
-          location: viewRecord.location,
+          trackingId: analyticsRecord._id,
+          articleSlug: analyticsRecord.articleSlug,
+          articleTitle: analyticsRecord.articleTitle,
+          ipAddress: analyticsRecord.ipAddress.substring(0, 8) + '***',
+          city: analyticsRecord.city,
           isRealArticle: !!article,
+          isUniqueView: analyticsRecord.isUniqueView,
           newViewCount: updatedArticle?.views || 0,
-          totalViewsInDB: totalViews,
-          articleViewsInDB: articleViews,
+          statistics: {
+            totalViews,
+            articleViews,
+            uniqueViews
+          },
           originalBody: body
         },
         timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error('View tracking error:', error);
+      console.error('NEW ANALYTICS SYSTEM - Tracking error:', error);
       return NextResponse.json({
         success: false,
-        message: 'View tracking failed - FORCED EXECUTION',
+        message: 'NEW ANALYTICS SYSTEM - Tracking failed',
         error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
         originalBody: body,
         timestamp: new Date().toISOString()
       }, { status: 500 });

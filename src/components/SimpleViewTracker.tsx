@@ -56,17 +56,21 @@ export default function SimpleViewTracker({ articleSlug, articleTitle }: SimpleV
       console.error('Error tracking view:', error);
       hasTrackedView.current = false; // Allow retry
       
-      // Fallback: try manual increment
+      // Fallback: try test endpoint with new analytics
       try {
-        console.log('Trying fallback tracking method...');
-        const fallbackResponse = await fetch('/api/manual-increment', {
+        console.log('Trying fallback tracking via test endpoint...');
+        const fallbackResponse = await fetch('/api/test', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ articleSlug })
+          body: JSON.stringify({
+            articleSlug,
+            sessionId,
+            referrer: typeof window !== 'undefined' ? document.referrer || '' : ''
+          })
         });
-        
+
         if (fallbackResponse.ok) {
           const fallbackResult = await fallbackResponse.json();
           console.log('Fallback tracking successful:', fallbackResult);
