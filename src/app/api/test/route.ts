@@ -5,20 +5,40 @@ export async function GET(request: NextRequest) {
   const mode = searchParams.get('mode');
 
   if (mode === 'analytics') {
-    return NextResponse.json({
-      success: true,
-      message: 'Analytics mode detected',
-      data: {
-        mode,
-        url: request.url,
-        headers: {
-          userAgent: request.headers.get('user-agent'),
-          forwarded: request.headers.get('x-forwarded-for'),
-          host: request.headers.get('host')
-        }
-      },
-      timestamp: new Date().toISOString()
-    });
+    try {
+      // Import dependencies dynamically
+      const { connectDB } = await import('@/lib/mongodb');
+      const ArticleView = (await import('@/models/ArticleView')).default;
+
+      await connectDB();
+
+      // Get count of existing views
+      const viewsCount = await ArticleView.countDocuments();
+
+      return NextResponse.json({
+        success: true,
+        message: 'Analytics test successful',
+        data: {
+          mode,
+          viewsCount,
+          dbConnected: true,
+          url: request.url,
+          headers: {
+            userAgent: request.headers.get('user-agent'),
+            forwarded: request.headers.get('x-forwarded-for'),
+            host: request.headers.get('host')
+          }
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      return NextResponse.json({
+        success: false,
+        message: 'Analytics test failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      }, { status: 500 });
+    }
   }
 
   return NextResponse.json({
