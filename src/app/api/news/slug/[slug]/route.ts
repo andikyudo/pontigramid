@@ -25,63 +25,24 @@ export async function GET(
       );
     }
 
-    // Track article view (server-side)
+    // FORCE INCREMENT VIEW COUNT FOR TESTING
     try {
-      const ipAddress = request.headers.get('x-forwarded-for') ||
-                       request.headers.get('x-real-ip') ||
-                       '127.0.0.1';
-      const userAgent = request.headers.get('user-agent') || 'Unknown';
+      console.log('FORCE INCREMENT: Starting view tracking for article:', news.slug);
 
-      // Check if this is a unique view (same IP + article within 24 hours)
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const existingView = await ArticleView.findOne({
-        articleId: news._id,
-        ipAddress,
-        viewedAt: { $gte: twentyFourHoursAgo }
-      });
+      // Always increment view count for testing
+      const updatedNews = await News.findByIdAndUpdate(
+        news._id,
+        { $inc: { views: 1 } },
+        { new: true }
+      );
 
-      const isUniqueView = !existingView;
+      console.log('FORCE INCREMENT: View count updated to:', updatedNews?.views);
 
-      // Create view record
-      const viewRecord = new ArticleView({
-        articleId: news._id,
-        articleSlug: news.slug,
-        articleTitle: news.title,
-        articleCategory: news.category,
-        articleAuthor: news.author,
-        visitorId: `server-visitor-${Date.now()}`,
-        ipAddress,
-        userAgent,
-        sessionId: `server-session-${Date.now()}`,
-        viewDuration: 0, // Will be updated by client-side tracking
-        isUniqueView,
-        location: {
-          country: 'Indonesia',
-          region: 'Kalimantan Barat',
-          city: 'Pontianak',
-          district: 'Pontianak Kota'
-        },
-        device: {
-          type: userAgent.toLowerCase().includes('mobile') ? 'mobile' : 'desktop',
-          os: 'Server Detected',
-          browser: 'Server Detected'
-        },
-        viewedAt: new Date()
-      });
+      // Update the news object to return the new view count
+      news.views = updatedNews?.views || (news.views || 0) + 1;
 
-      await viewRecord.save();
-
-      // Update article view count (only for unique views)
-      if (isUniqueView) {
-        await News.findByIdAndUpdate(
-          news._id,
-          { $inc: { views: 1 } }
-        );
-      }
-
-      console.log(`Article view tracked: ${news.slug}, IP: ${ipAddress.substring(0, 8)}***, Unique: ${isUniqueView}`);
     } catch (trackingError) {
-      console.error('Error tracking article view:', trackingError);
+      console.error('FORCE INCREMENT: Error updating view count:', trackingError);
       // Don't fail the request if tracking fails
     }
 
