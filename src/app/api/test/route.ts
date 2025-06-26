@@ -9,11 +9,18 @@ export async function GET(request: NextRequest) {
       // Import dependencies dynamically
       const { connectDB } = await import('@/lib/mongodb');
       const ArticleView = (await import('@/models/ArticleView')).default;
+      const News = (await import('@/models/News')).default;
 
       await connectDB();
 
       // Get count of existing views
       const viewsCount = await ArticleView.countDocuments();
+
+      // Get article count
+      const articlesCount = await News.countDocuments();
+
+      // Get sample article
+      const sampleArticle = await News.findOne().lean();
 
       return NextResponse.json({
         success: true,
@@ -21,6 +28,13 @@ export async function GET(request: NextRequest) {
         data: {
           mode,
           viewsCount,
+          articlesCount,
+          sampleArticle: sampleArticle ? {
+            id: sampleArticle._id,
+            title: sampleArticle.title,
+            slug: sampleArticle.slug,
+            views: sampleArticle.views || 0
+          } : null,
           dbConnected: true,
           url: request.url,
           headers: {
