@@ -1,9 +1,83 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { connectDB } from '@/lib/mongodb';
+import News from '@/models/News';
 
 export async function GET(request: NextRequest) {
   console.log('🔍 GET REQUEST RECEIVED - Test endpoint');
   const { searchParams } = new URL(request.url);
   const mode = searchParams.get('mode');
+
+  // DATABASE DIAGNOSTIC MODE
+  if (mode === 'db-diagnostic') {
+    try {
+      await connectDB();
+      console.log('✅ Database connection successful');
+
+      // Test 1: Check if we can read data
+      const readTest = await News.findOne().limit(1);
+      console.log('📖 Read test:', readTest ? 'SUCCESS' : 'FAILED');
+
+      // Test 2: Check database permissions by attempting a write operation
+      const testSlug = 'diagnostic-test-' + Date.now();
+      let writeTest = false;
+      let writeError = null;
+
+      try {
+        // Try to create a test document
+        const testDoc = new News({
+          title: 'Database Diagnostic Test',
+          slug: testSlug,
+          content: 'This is a test document for database diagnostics',
+          excerpt: 'Test excerpt',
+          category: 'test',
+          author: 'System',
+          published: false,
+          views: 0
+        });
+
+        await testDoc.save();
+        console.log('✅ Write test (create): SUCCESS');
+
+        // Try to update the test document
+        await News.findOneAndUpdate(
+          { slug: testSlug },
+          { $inc: { views: 1 } }
+        );
+        console.log('✅ Write test (update): SUCCESS');
+
+        // Clean up - delete the test document
+        await News.deleteOne({ slug: testSlug });
+        console.log('✅ Write test (delete): SUCCESS');
+
+        writeTest = true;
+      } catch (error) {
+        writeError = error instanceof Error ? error.message : 'Unknown error';
+        console.error('❌ Write test failed:', writeError);
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: '🔍 DATABASE DIAGNOSTIC COMPLETE',
+        diagnostics: {
+          connectionStatus: 'SUCCESS',
+          readPermissions: readTest ? 'SUCCESS' : 'FAILED',
+          writePermissions: writeTest ? 'SUCCESS' : 'FAILED',
+          writeError: writeError,
+          mongodbUri: process.env.MONGODB_URI ? 'CONFIGURED' : 'MISSING',
+          timestamp: new Date().toISOString()
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Database diagnostic failed:', error);
+      return NextResponse.json({
+        success: false,
+        message: '❌ DATABASE DIAGNOSTIC FAILED',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
 
   if (mode === 'analytics') {
     try {
