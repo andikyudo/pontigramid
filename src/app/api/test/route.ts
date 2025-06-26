@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
 
               return NextResponse.json({
                 success: true,
-                message: '🎉 ULTIMATE ANALYTICS v8.0 - DIRECT INCREMENT + ANALYTICS SUCCESSFUL!',
+                message: '🎉 ULTIMATE ANALYTICS v8.1 - DIRECT INCREMENT + ANALYTICS SUCCESSFUL!',
                 data: {
                   articleSlug: directResult.slug,
                   previousViews: existingArticle.views,
