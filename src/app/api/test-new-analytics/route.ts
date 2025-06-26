@@ -1,71 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const mode = searchParams.get('mode');
-
-  if (mode === 'analytics') {
-    try {
-      // Import dependencies dynamically
-      const { connectDB } = await import('@/lib/mongodb');
-      const ArticleView = (await import('@/models/ArticleView')).default;
-      const News = (await import('@/models/News')).default;
-
-      await connectDB();
-
-      // Get count of existing views
-      const viewsCount = await ArticleView.countDocuments();
-
-      // Get article count
-      const articlesCount = await News.countDocuments();
-
-      // Get sample article
-      const sampleArticle = await News.findOne().lean();
-
-      return NextResponse.json({
-        success: true,
-        message: 'Analytics test successful',
-        data: {
-          mode,
-          viewsCount,
-          articlesCount,
-          sampleArticle: sampleArticle ? {
-            id: (sampleArticle as any)._id,
-            title: (sampleArticle as any).title,
-            slug: (sampleArticle as any).slug,
-            views: (sampleArticle as any).views || 0
-          } : null,
-          dbConnected: true,
-          url: request.url,
-          headers: {
-            userAgent: request.headers.get('user-agent'),
-            forwarded: request.headers.get('x-forwarded-for'),
-            host: request.headers.get('host')
-          }
-        },
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      return NextResponse.json({
-        success: false,
-        message: 'Analytics test failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
-      }, { status: 500 });
-    }
-  }
-
-  return NextResponse.json({
-    success: true,
-    message: 'API is working',
-    timestamp: new Date().toISOString()
-  });
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('NEW ANALYTICS SYSTEM v2.0 - POST body received:', body);
+    console.log('🚀 NEW ANALYTICS SYSTEM v3.0 - Request received:', body);
 
     // NEW ANALYTICS SYSTEM - Always attempt tracking
     try {
@@ -73,29 +11,31 @@ export async function POST(request: NextRequest) {
       const { connectDB } = await import('@/lib/mongodb');
       const ReaderAnalytics = (await import('@/models/ReaderAnalytics')).default;
       const News = (await import('@/models/News')).default;
-
+      
       await connectDB();
-      console.log('Database connected successfully');
-
+      console.log('✅ Database connected successfully');
+      
       // Use provided articleSlug or default
       const articleSlug = body.articleSlug || 'test-default-article';
-      console.log('Processing article slug:', articleSlug);
-
+      console.log('📰 Processing article slug:', articleSlug);
+      
       // Try to find the actual article
       let article = null;
       try {
         article = await News.findOne({ slug: articleSlug }).lean();
-        console.log('Article lookup result:', article ? `Found: ${(article as any).title}` : 'Not found');
+        console.log('🔍 Article lookup result:', article ? `Found: ${(article as any).title}` : 'Not found');
       } catch (err) {
-        console.log('Article lookup error:', err);
+        console.log('❌ Article lookup error:', err);
       }
-
+      
       // Get client information
-      const ipAddress = request.headers.get('x-forwarded-for') ||
-                       request.headers.get('x-real-ip') ||
+      const ipAddress = request.headers.get('x-forwarded-for') || 
+                       request.headers.get('x-real-ip') || 
                        '127.0.0.1';
       const userAgent = request.headers.get('user-agent') || 'Unknown';
-
+      
+      console.log('🌐 Client info - IP:', ipAddress.substring(0, 8) + '***');
+      
       // Check for unique view (same IP + article within 24 hours)
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const existingView = await ReaderAnalytics.findOne({
@@ -105,7 +45,7 @@ export async function POST(request: NextRequest) {
       });
 
       const isUniqueView = !existingView;
-      console.log('Is unique view:', isUniqueView);
+      console.log('🔄 Is unique view:', isUniqueView);
 
       // Create analytics record using new schema
       const analyticsRecord = new ReaderAnalytics({
@@ -123,8 +63,8 @@ export async function POST(request: NextRequest) {
       });
 
       await analyticsRecord.save();
-      console.log('Analytics record saved with ID:', analyticsRecord._id);
-
+      console.log('💾 Analytics record saved with ID:', analyticsRecord._id);
+      
       // Update article view count if real article and unique view
       let updatedArticle = null;
       if (article && isUniqueView) {
@@ -133,22 +73,24 @@ export async function POST(request: NextRequest) {
           { $inc: { views: 1 } },
           { new: true }
         );
-        console.log('Article view count updated to:', updatedArticle?.views);
+        console.log('📈 Article view count updated to:', updatedArticle?.views);
       }
 
       // Get current counts for verification
       const totalViews = await ReaderAnalytics.countDocuments();
-      const articleViews = await ReaderAnalytics.countDocuments({
+      const articleViews = await ReaderAnalytics.countDocuments({ 
         articleSlug: articleSlug
       });
-      const uniqueViews = await ReaderAnalytics.countDocuments({
+      const uniqueViews = await ReaderAnalytics.countDocuments({ 
         articleSlug: articleSlug,
         isUniqueView: true
       });
 
+      console.log('📊 Statistics - Total:', totalViews, 'Article:', articleViews, 'Unique:', uniqueViews);
+
       return NextResponse.json({
         success: true,
-        message: 'NEW ANALYTICS SYSTEM - Tracking successful!',
+        message: '🎉 NEW ANALYTICS SYSTEM v3.0 - Tracking successful!',
         data: {
           trackingId: analyticsRecord._id,
           articleSlug: analyticsRecord.articleSlug,
@@ -167,11 +109,12 @@ export async function POST(request: NextRequest) {
         },
         timestamp: new Date().toISOString()
       });
+
     } catch (error) {
-      console.error('NEW ANALYTICS SYSTEM - Tracking error:', error);
+      console.error('❌ NEW ANALYTICS SYSTEM v3.0 - Tracking error:', error);
       return NextResponse.json({
         success: false,
-        message: 'NEW ANALYTICS SYSTEM - Tracking failed',
+        message: '💥 NEW ANALYTICS SYSTEM v3.0 - Tracking failed',
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
         originalBody: body,
@@ -179,11 +122,20 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
   } catch (error) {
-    console.error('Error parsing JSON:', error);
+    console.error('❌ Error parsing JSON:', error);
     return NextResponse.json({
       success: false,
-      error: 'Invalid JSON',
+      error: 'Invalid JSON in NEW ANALYTICS SYSTEM v3.0',
       timestamp: new Date().toISOString()
     }, { status: 400 });
   }
+}
+
+export async function GET(request: NextRequest) {
+  return NextResponse.json({
+    success: true,
+    message: '🚀 NEW ANALYTICS SYSTEM v3.0 - Endpoint is ready!',
+    info: 'Use POST method to track article views',
+    timestamp: new Date().toISOString()
+  });
 }
