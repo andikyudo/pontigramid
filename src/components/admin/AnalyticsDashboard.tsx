@@ -113,7 +113,7 @@ export default function AnalyticsDashboard() {
         ...(author && { author })
       });
 
-      const response = await fetch(`/api/admin/analytics/dashboard?${params}`);
+      const response = await fetch(`/api/analytics/dashboard?${params}`);
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.data) {
@@ -251,8 +251,11 @@ export default function AnalyticsDashboard() {
       {/* Header & Filters */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="text-gray-600">Analisis performa artikel dan pembaca</p>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <TrendingUp className="h-8 w-8 text-blue-600" />
+            Dashboard Analytics
+          </h1>
+          <p className="text-gray-600 mt-1">Analisis real-time performa artikel dan interaksi pembaca Pontianak</p>
         </div>
         
         <div className="flex flex-wrap gap-3">

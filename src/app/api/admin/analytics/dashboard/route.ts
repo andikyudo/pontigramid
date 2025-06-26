@@ -57,60 +57,58 @@ export async function GET(request: NextRequest) {
       baseFilter.articleAuthor = author;
     }
 
-    // 1. Overall Statistics - Combine data from both collections
-    // Get stats from ArticleView collection
-    const articleViewStats = await ArticleView.aggregate([
-      { $match: baseFilter },
-      {
-        $group: {
-          _id: null,
-          totalViews: { $sum: 1 },
-          uniqueViews: { $sum: { $cond: ['$isUniqueView', 1, 0] } },
-          avgViewDuration: { $avg: '$viewDuration' },
-          totalArticles: { $addToSet: '$articleId' },
-          totalVisitors: { $addToSet: '$visitorId' }
-        }
-      }
-    ]);
-
-    // Get stats from ReaderAnalytics collection (from /api/test tracking)
+    // 1. Overall Statistics - Use ReaderAnalytics as primary source
     const readerAnalyticsFilter = {
       viewedAt: { $gte: startDate, $lte: now }
     };
 
-    const readerAnalyticsStats = await ReaderAnalytics.aggregate([
+    const overallStats = await ReaderAnalytics.aggregate([
       { $match: readerAnalyticsFilter },
       {
         $group: {
           _id: null,
           totalViews: { $sum: 1 },
           uniqueViews: { $sum: { $cond: ['$isUniqueView', 1, 0] } },
+          avgViewDuration: { $avg: '$viewDuration' },
           totalArticles: { $addToSet: '$articleSlug' },
-          totalVisitors: { $addToSet: '$ipAddress' }
+          totalVisitors: { $addToSet: '$ipAddress' },
+          totalSessions: { $addToSet: '$sessionId' }
+        }
+      },
+      {
+        $project: {
+          totalViews: 1,
+          uniqueViews: 1,
+          avgViewDuration: { $round: ['$avgViewDuration', 2] },
+          totalArticles: { $size: '$totalArticles' },
+          totalVisitors: { $size: '$totalVisitors' },
+          totalSessions: { $size: '$totalSessions' },
+          bounceRate: {
+            $round: [
+              {
+                $multiply: [
+                  {
+                    $divide: [
+                      { $subtract: ['$totalViews', '$uniqueViews'] },
+                      '$totalViews'
+                    ]
+                  },
+                  100
+                ]
+              },
+              2
+            ]
+          }
         }
       }
     ]);
 
-    // Combine stats from both collections
-    const articleViewData = articleViewStats[0] || { totalViews: 0, uniqueViews: 0, avgViewDuration: 0, totalArticles: [], totalVisitors: [] };
-    const readerAnalyticsData = readerAnalyticsStats[0] || { totalViews: 0, uniqueViews: 0, totalArticles: [], totalVisitors: [] };
-
-    const overallStats = [{
-      totalViews: articleViewData.totalViews + readerAnalyticsData.totalViews,
-      uniqueViews: articleViewData.uniqueViews + readerAnalyticsData.uniqueViews,
-      avgViewDuration: articleViewData.avgViewDuration || 0,
-      totalArticles: [...new Set([...articleViewData.totalArticles, ...readerAnalyticsData.totalArticles])].length,
-      totalVisitors: [...new Set([...articleViewData.totalVisitors, ...readerAnalyticsData.totalVisitors])].length,
-      bounceRate: 0 // Calculate based on combined data
-    }];
-
-    // 2. Top Articles - Combine data from both collections
-    // Get top articles from ArticleView
-    const topArticlesFromViews = await ArticleView.aggregate([
-      { $match: baseFilter },
+    // 2. Top Articles - Use ReaderAnalytics as primary source
+    const topArticles = await ReaderAnalytics.aggregate([
+      { $match: readerAnalyticsFilter },
       {
         $group: {
-          _id: '$articleId',
+          _id: '$articleSlug',
           articleSlug: { $first: '$articleSlug' },
           articleTitle: { $first: '$articleTitle' },
           articleCategory: { $first: '$articleCategory' },
@@ -120,75 +118,37 @@ export async function GET(request: NextRequest) {
           avgViewDuration: { $avg: '$viewDuration' },
           lastViewed: { $max: '$viewedAt' }
         }
-      }
-    ]);
-
-    // Get top articles from ReaderAnalytics
-    const topArticlesFromAnalytics = await ReaderAnalytics.aggregate([
-      { $match: readerAnalyticsFilter },
+      },
+      { $sort: { totalViews: -1 } },
+      { $limit: 10 },
       {
-        $group: {
-          _id: '$articleSlug',
-          articleSlug: { $first: '$articleSlug' },
-          articleTitle: { $first: '$articleTitle' },
-          totalViews: { $sum: 1 },
-          uniqueViews: { $sum: { $cond: ['$isUniqueView', 1, 0] } },
-          lastViewed: { $max: '$viewedAt' }
+        $project: {
+          articleSlug: 1,
+          articleTitle: 1,
+          articleCategory: 1,
+          articleAuthor: 1,
+          totalViews: 1,
+          uniqueViews: 1,
+          avgViewDuration: { $round: ['$avgViewDuration', 2] },
+          lastViewed: 1,
+          engagementRate: {
+            $round: [
+              {
+                $multiply: [
+                  { $divide: ['$uniqueViews', '$totalViews'] },
+                  100
+                ]
+              },
+              2
+            ]
+          }
         }
       }
     ]);
 
-    // Combine and merge article data
-    const articleMap = new Map();
-
-    // Add ArticleView data
-    topArticlesFromViews.forEach(article => {
-      articleMap.set(article.articleSlug, {
-        articleSlug: article.articleSlug,
-        articleTitle: article.articleTitle,
-        articleCategory: article.articleCategory || 'Unknown',
-        articleAuthor: article.articleAuthor || 'Unknown',
-        totalViews: article.totalViews,
-        uniqueViews: article.uniqueViews,
-        avgViewDuration: article.avgViewDuration || 0,
-        lastViewed: article.lastViewed
-      });
-    });
-
-    // Add/merge ReaderAnalytics data
-    topArticlesFromAnalytics.forEach(article => {
-      const existing = articleMap.get(article.articleSlug);
-      if (existing) {
-        existing.totalViews += article.totalViews;
-        existing.uniqueViews += article.uniqueViews;
-        existing.lastViewed = new Date(Math.max(existing.lastViewed.getTime(), article.lastViewed.getTime()));
-      } else {
-        articleMap.set(article.articleSlug, {
-          articleSlug: article.articleSlug,
-          articleTitle: article.articleTitle,
-          articleCategory: 'Unknown',
-          articleAuthor: 'Unknown',
-          totalViews: article.totalViews,
-          uniqueViews: article.uniqueViews,
-          avgViewDuration: 0,
-          lastViewed: article.lastViewed
-        });
-      }
-    });
-
-    // Convert to array and sort by total views
-    const topArticles = Array.from(articleMap.values())
-      .sort((a, b) => b.totalViews - a.totalViews)
-      .slice(0, 10)
-      .map(article => ({
-        ...article,
-        avgViewDuration: Math.round(article.avgViewDuration * 100) / 100,
-        engagementRate: Math.round((article.uniqueViews / article.totalViews) * 100 * 100) / 100
-      }));
-
-    // 3. Views Trend (daily for the period)
-    const viewsTrend = await ArticleView.aggregate([
-      { $match: baseFilter },
+    // 3. Views Trend (daily for the period) - Use ReaderAnalytics
+    const viewsTrend = await ReaderAnalytics.aggregate([
+      { $match: readerAnalyticsFilter },
       {
         $group: {
           _id: {
@@ -218,9 +178,9 @@ export async function GET(request: NextRequest) {
       }
     ]);
 
-    // 4. Category Performance
-    const categoryPerformance = await ArticleView.aggregate([
-      { $match: baseFilter },
+    // 4. Category Performance - Use ReaderAnalytics
+    const categoryPerformance = await ReaderAnalytics.aggregate([
+      { $match: readerAnalyticsFilter },
       {
         $group: {
           _id: '$articleCategory',
@@ -248,32 +208,26 @@ export async function GET(request: NextRequest) {
       }
     ]);
 
-    // 5. Geographic Distribution
-    const geographicDistribution = await ArticleView.aggregate([
-      { 
+    // 5. Geographic Distribution - Use ReaderAnalytics
+    const geographicDistribution = await ReaderAnalytics.aggregate([
+      {
         $match: {
-          ...baseFilter,
-          'location.city': { $exists: true, $ne: null }
+          ...readerAnalyticsFilter,
+          city: { $exists: true, $ne: null }
         }
       },
       {
         $group: {
           _id: {
-            city: '$location.city',
-            district: '$location.district',
-            region: '$location.region',
-            country: '$location.country'
+            city: '$city',
+            region: '$region',
+            country: '$country'
           },
           totalViews: { $sum: 1 },
           uniqueViews: { $sum: { $cond: ['$isUniqueView', 1, 0] } },
           avgViewDuration: { $avg: '$viewDuration' },
           topCategories: { $push: '$articleCategory' },
-          coordinates: {
-            $first: {
-              latitude: '$location.latitude',
-              longitude: '$location.longitude'
-            }
-          }
+          uniqueVisitors: { $addToSet: '$ipAddress' }
         }
       },
       { $sort: { totalViews: -1 } },
@@ -282,14 +236,13 @@ export async function GET(request: NextRequest) {
         $project: {
           location: {
             city: '$_id.city',
-            district: '$_id.district',
             region: '$_id.region',
             country: '$_id.country'
           },
           totalViews: 1,
           uniqueViews: 1,
           avgViewDuration: { $round: ['$avgViewDuration', 2] },
-          coordinates: 1,
+          uniqueVisitors: { $size: '$uniqueVisitors' },
           topCategory: {
             $arrayElemAt: [
               {
@@ -316,15 +269,15 @@ export async function GET(request: NextRequest) {
       }
     ]);
 
-    // 6. Device and Browser Analytics
-    const deviceAnalytics = await ArticleView.aggregate([
-      { $match: baseFilter },
+    // 6. Device and Browser Analytics - Use ReaderAnalytics
+    const deviceAnalytics = await ReaderAnalytics.aggregate([
+      { $match: readerAnalyticsFilter },
       {
         $group: {
           _id: null,
-          deviceTypes: { $push: '$device.type' },
-          browsers: { $push: '$device.browser' },
-          operatingSystems: { $push: '$device.os' }
+          deviceTypes: { $push: '$deviceType' },
+          platforms: { $push: '$platform' },
+          userAgents: { $push: '$userAgent' }
         }
       },
       {
