@@ -17,7 +17,8 @@
     "dev:clean": "npm run check-extensions && npm run dev",
     "deploy": "vercel --prod",
     "deploy:preview": "vercel",
-    "postbuild": "echo 'Build completed successfully!'"
+    "postbuild": "echo 'Build completed successfully!'",
+    "test-db": "node test-mongodb-connection.js"
   },
   "dependencies": {
     "@next-auth/mongodb-adapter": "^1.1.3",
