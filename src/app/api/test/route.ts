@@ -34,17 +34,61 @@ export async function POST(request: NextRequest) {
     const { mode, articleSlug } = body;
 
     if (mode === 'track-view') {
-      return NextResponse.json({
-        success: true,
-        message: 'Track view mode detected',
-        data: {
-          mode,
-          articleSlug,
+      try {
+        // Import dependencies dynamically
+        const { connectDB } = await import('@/lib/mongodb');
+        const ArticleView = (await import('@/models/ArticleView')).default;
+
+        await connectDB();
+
+        // Create test view record
+        const viewRecord = new ArticleView({
+          articleId: '507f1f77bcf86cd799439011', // dummy ObjectId
+          articleSlug: articleSlug || 'test-article',
+          articleTitle: 'Test Article',
+          articleCategory: 'test',
+          articleAuthor: 'Test Author',
+          visitorId: 'test-visitor-' + Date.now(),
           ipAddress: request.headers.get('x-forwarded-for') || '127.0.0.1',
-          userAgent: request.headers.get('user-agent') || 'Unknown'
-        },
-        timestamp: new Date().toISOString()
-      });
+          userAgent: request.headers.get('user-agent') || 'Unknown',
+          sessionId: 'test-session-' + Date.now(),
+          viewDuration: 30,
+          isUniqueView: true,
+          location: {
+            country: 'Indonesia',
+            region: 'Kalimantan Barat',
+            city: 'Pontianak',
+            district: 'Pontianak Kota'
+          },
+          device: {
+            type: 'desktop',
+            os: 'Test OS',
+            browser: 'Test Browser'
+          },
+          viewedAt: new Date()
+        });
+
+        await viewRecord.save();
+
+        return NextResponse.json({
+          success: true,
+          message: 'View tracking successful',
+          data: {
+            viewId: viewRecord._id,
+            articleSlug: viewRecord.articleSlug,
+            ipAddress: viewRecord.ipAddress,
+            location: viewRecord.location
+          },
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        return NextResponse.json({
+          success: false,
+          message: 'View tracking failed',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString()
+        }, { status: 500 });
+      }
     }
 
     return NextResponse.json({
