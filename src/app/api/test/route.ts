@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
+  console.log('🔍 GET REQUEST RECEIVED - Test endpoint');
   const { searchParams } = new URL(request.url);
   const mode = searchParams.get('mode');
 
@@ -63,9 +64,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  console.log('🚀 POST REQUEST RECEIVED - Analytics tracking starting');
   try {
     const body = await request.json();
-    console.log('NEW ANALYTICS SYSTEM v2.0 - POST body received:', body);
+    console.log('📦 NEW ANALYTICS SYSTEM v5.0 - POST body received:', body);
 
     // NEW ANALYTICS SYSTEM - Always attempt tracking
     try {
@@ -148,7 +150,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: 'NEW ANALYTICS SYSTEM - Tracking successful!',
+        message: '🎉 ANALYTICS v5.0 - TRACKING SUCCESSFUL! View count incremented!',
         data: {
           trackingId: analyticsRecord._id,
           articleSlug: analyticsRecord.articleSlug,
