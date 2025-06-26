@@ -113,7 +113,7 @@ export default function AnalyticsDashboard() {
         ...(author && { author })
       });
 
-      const response = await fetch(`/api/analytics/dashboard?${params}`);
+      const response = await fetch(`/api/admin/analytics/dashboard?${params}`);
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
@@ -165,10 +165,35 @@ export default function AnalyticsDashboard() {
   if (!data) {
     return (
       <div className="p-6 text-center">
-        <p className="text-gray-500">Gagal memuat data analytics</p>
+        <p className="text-gray-500 mb-4">Gagal memuat data analytics</p>
+        <button
+          onClick={fetchAnalytics}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Coba Lagi
+        </button>
       </div>
     );
   }
+
+  // Ensure data structure exists with defaults
+  const safeData = {
+    overallStats: data.overallStats || {
+      totalViews: 0,
+      uniqueViews: 0,
+      avgViewDuration: 0,
+      totalArticles: 0,
+      totalVisitors: 0,
+      bounceRate: 0
+    },
+    viewsTrend: data.viewsTrend || [],
+    topArticles: data.topArticles || [],
+    categoryPerformance: data.categoryPerformance || [],
+    geographicDistribution: data.geographicDistribution || [],
+    deviceAnalytics: data.deviceAnalytics || {
+      deviceBreakdown: []
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -216,7 +241,7 @@ export default function AnalyticsDashboard() {
             <div>
               <p className="text-sm font-medium text-gray-600">Total Views</p>
               <p className="text-2xl font-bold text-gray-900">
-                {formatNumber(data.overallStats.totalViews)}
+                {formatNumber(safeData.overallStats.totalViews)}
               </p>
             </div>
             <div className="p-3 bg-blue-100 rounded-full">
@@ -230,7 +255,7 @@ export default function AnalyticsDashboard() {
             <div>
               <p className="text-sm font-medium text-gray-600">Unique Views</p>
               <p className="text-2xl font-bold text-gray-900">
-                {formatNumber(data.overallStats.uniqueViews)}
+                {formatNumber(safeData.overallStats.uniqueViews)}
               </p>
             </div>
             <div className="p-3 bg-green-100 rounded-full">
@@ -244,7 +269,7 @@ export default function AnalyticsDashboard() {
             <div>
               <p className="text-sm font-medium text-gray-600">Avg. Duration</p>
               <p className="text-2xl font-bold text-gray-900">
-                {formatDuration(data.overallStats.avgViewDuration)}
+                {formatDuration(safeData.overallStats.avgViewDuration)}
               </p>
             </div>
             <div className="p-3 bg-yellow-100 rounded-full">
@@ -258,7 +283,7 @@ export default function AnalyticsDashboard() {
             <div>
               <p className="text-sm font-medium text-gray-600">Bounce Rate</p>
               <p className="text-2xl font-bold text-gray-900">
-                {data.overallStats.bounceRate.toFixed(1)}%
+                {safeData.overallStats.bounceRate.toFixed(1)}%
               </p>
             </div>
             <div className="p-3 bg-red-100 rounded-full">
@@ -274,7 +299,7 @@ export default function AnalyticsDashboard() {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h3 className="text-lg font-semibold mb-4">Trend Views</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={data.viewsTrend}>
+            <AreaChart data={safeData.viewsTrend}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey="date" 
@@ -295,7 +320,7 @@ export default function AnalyticsDashboard() {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h3 className="text-lg font-semibold mb-4">Performa Kategori</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data.categoryPerformance.slice(0, 8)}>
+            <BarChart data={safeData.categoryPerformance.slice(0, 8)}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="category" angle={-45} textAnchor="end" height={80} />
               <YAxis />
@@ -314,7 +339,7 @@ export default function AnalyticsDashboard() {
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
-                data={data.deviceAnalytics.deviceBreakdown}
+                data={safeData.deviceAnalytics.deviceBreakdown}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
@@ -323,7 +348,7 @@ export default function AnalyticsDashboard() {
                 fill="#8884d8"
                 dataKey="count"
               >
-                {data.deviceAnalytics.deviceBreakdown.map((entry, index) => (
+                {safeData.deviceAnalytics.deviceBreakdown.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -336,7 +361,7 @@ export default function AnalyticsDashboard() {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h3 className="text-lg font-semibold mb-4">Distribusi Geografis</h3>
           <div className="space-y-3 max-h-72 overflow-y-auto">
-            {data.geographicDistribution.slice(0, 10).map((location, index) => (
+            {safeData.geographicDistribution.slice(0, 10).map((location, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <MapPin className="w-4 h-4 text-gray-500" />
@@ -389,7 +414,7 @@ export default function AnalyticsDashboard() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {data.topArticles.map((article, index) => (
+              {safeData.topArticles.map((article, index) => (
                 <tr key={index} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div>
