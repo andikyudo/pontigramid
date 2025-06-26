@@ -57,13 +57,15 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: '🔍 DATABASE DIAGNOSTIC COMPLETE',
+        message: '🔍 DATABASE DIAGNOSTIC COMPLETE - v2.0',
         diagnostics: {
           connectionStatus: 'SUCCESS',
           readPermissions: readTest ? 'SUCCESS' : 'FAILED',
           writePermissions: writeTest ? 'SUCCESS' : 'FAILED',
           writeError: writeError,
           mongodbUri: process.env.MONGODB_URI ? 'CONFIGURED' : 'MISSING',
+          mongodbUriLength: process.env.MONGODB_URI ? process.env.MONGODB_URI.length : 0,
+          nodeEnv: process.env.NODE_ENV,
           timestamp: new Date().toISOString()
         }
       });
