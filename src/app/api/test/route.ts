@@ -51,28 +51,38 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { mode, articleSlug } = body;
+    console.log('POST body received:', body);
 
-    if (mode === 'track-view') {
+    // Always try to track view if articleSlug is provided
+    if (body.articleSlug) {
       try {
         // Import dependencies dynamically
         const { connectDB } = await import('@/lib/mongodb');
         const ArticleView = (await import('@/models/ArticleView')).default;
+        const News = (await import('@/models/News')).default;
 
         await connectDB();
 
-        // Create test view record
+        // Try to find the actual article
+        let article = null;
+        try {
+          article = await News.findOne({ slug: body.articleSlug }).lean();
+        } catch (err) {
+          console.log('Article not found, using test data');
+        }
+
+        // Create view record
         const viewRecord = new ArticleView({
-          articleId: '507f1f77bcf86cd799439011', // dummy ObjectId
-          articleSlug: articleSlug || 'test-article',
-          articleTitle: 'Test Article',
-          articleCategory: 'test',
-          articleAuthor: 'Test Author',
-          visitorId: 'test-visitor-' + Date.now(),
-          ipAddress: request.headers.get('x-forwarded-for') || '127.0.0.1',
+          articleId: article ? (article as any)._id : '507f1f77bcf86cd799439011',
+          articleSlug: body.articleSlug,
+          articleTitle: article ? (article as any).title : 'Test Article',
+          articleCategory: article ? (article as any).category : 'test',
+          articleAuthor: article ? (article as any).author : 'Test Author',
+          visitorId: body.visitorId || 'test-visitor-' + Date.now(),
+          ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1',
           userAgent: request.headers.get('user-agent') || 'Unknown',
-          sessionId: 'test-session-' + Date.now(),
-          viewDuration: 30,
+          sessionId: body.sessionId || 'test-session-' + Date.now(),
+          viewDuration: body.viewDuration || 30,
           isUniqueView: true,
           location: {
             country: 'Indonesia',
@@ -82,13 +92,21 @@ export async function POST(request: NextRequest) {
           },
           device: {
             type: 'desktop',
-            os: 'Test OS',
-            browser: 'Test Browser'
+            os: 'Production OS',
+            browser: 'Production Browser'
           },
           viewedAt: new Date()
         });
 
         await viewRecord.save();
+
+        // Update article view count if real article
+        if (article) {
+          await News.findByIdAndUpdate(
+            (article as any)._id,
+            { $inc: { views: 1 } }
+          );
+        }
 
         return NextResponse.json({
           success: true,
@@ -97,11 +115,13 @@ export async function POST(request: NextRequest) {
             viewId: viewRecord._id,
             articleSlug: viewRecord.articleSlug,
             ipAddress: viewRecord.ipAddress,
-            location: viewRecord.location
+            location: viewRecord.location,
+            isRealArticle: !!article
           },
           timestamp: new Date().toISOString()
         });
       } catch (error) {
+        console.error('View tracking error:', error);
         return NextResponse.json({
           success: false,
           message: 'View tracking failed',
