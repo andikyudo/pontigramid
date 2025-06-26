@@ -33,7 +33,7 @@ const categoryColors: { [key: string]: string } = {
   hukum: 'bg-amber-100 text-amber-800'
 };
 
-export default function TrendingNews() {
+function TrendingNews() {
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   const { ref, inView } = useInView({

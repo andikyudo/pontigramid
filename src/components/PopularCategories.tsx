@@ -131,7 +131,7 @@ const categoriesConfig: CategoryData[] = [
   }
 ];
 
-export default function PopularCategories() {
+function PopularCategories() {
   const { ref } = useInView({
     triggerOnce: true,
     threshold: 0.1,
