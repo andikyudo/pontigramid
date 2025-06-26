@@ -72,18 +72,9 @@ export default function AdminLayoutWrapper({ children }: AdminLayoutWrapperProps
   }
 
   // For protected pages, use AdminAuth wrapper
-  if (!isAuthenticated) {
-    return (
-      <AdminAuth>
-        <AdminLayout>{children}</AdminLayout>
-      </AdminAuth>
-    );
-  }
-
-  // Authenticated users get the full admin layout
   return (
-    <AdminLayout>
-      {children}
-    </AdminLayout>
+    <AdminAuth>
+      <AdminLayout>{children}</AdminLayout>
+    </AdminAuth>
   );
 }

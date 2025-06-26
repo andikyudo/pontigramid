@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -257,17 +256,14 @@ export default function EditEventPage() {
 
   if (loading) {
     return (
-      <AdminLayout>
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      </AdminLayout>
     );
   }
 
   if (!event) {
     return (
-      <AdminLayout>
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Event Tidak Ditemukan</h2>
           <p className="text-gray-600 mb-4">Event yang Anda cari tidak ditemukan atau telah dihapus.</p>
@@ -276,12 +272,10 @@ export default function EditEventPage() {
             Kembali ke Daftar Event
           </Button>
         </div>
-      </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -639,6 +633,5 @@ export default function EditEventPage() {
           </div>
         </form>
       </div>
-    </AdminLayout>
   );
 }

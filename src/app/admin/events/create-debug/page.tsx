@@ -2,8 +2,6 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminLayout from '@/components/admin/AdminLayout';
-import AdminAuth from '@/components/admin/AdminAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ImageUploadWithCompression from '@/components/ImageUploadWithCompression';
@@ -125,8 +123,6 @@ export default function CreateEventDebugPage() {
   }, []);
 
   return (
-    <AdminAuth>
-      <AdminLayout>
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -294,7 +290,5 @@ export default function CreateEventDebugPage() {
             </div>
           </div>
         </div>
-      </AdminLayout>
-    </AdminAuth>
   );
 }

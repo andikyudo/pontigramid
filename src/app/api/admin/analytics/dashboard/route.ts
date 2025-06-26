@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { verifyAuth } from '@/lib/auth';
 import ArticleView from '@/models/ArticleView';
+import ReaderAnalytics from '@/models/ReaderAnalytics';
 import News from '@/models/News';
 
 export async function GET(request: NextRequest) {
@@ -56,8 +57,9 @@ export async function GET(request: NextRequest) {
       baseFilter.articleAuthor = author;
     }
 
-    // 1. Overall Statistics
-    const overallStats = await ArticleView.aggregate([
+    // 1. Overall Statistics - Combine data from both collections
+    // Get stats from ArticleView collection
+    const articleViewStats = await ArticleView.aggregate([
       { $match: baseFilter },
       {
         $group: {
@@ -68,36 +70,43 @@ export async function GET(request: NextRequest) {
           totalArticles: { $addToSet: '$articleId' },
           totalVisitors: { $addToSet: '$visitorId' }
         }
-      },
+      }
+    ]);
+
+    // Get stats from ReaderAnalytics collection (from /api/test tracking)
+    const readerAnalyticsFilter = {
+      viewedAt: { $gte: startDate, $lte: now }
+    };
+
+    const readerAnalyticsStats = await ReaderAnalytics.aggregate([
+      { $match: readerAnalyticsFilter },
       {
-        $project: {
-          totalViews: 1,
-          uniqueViews: 1,
-          avgViewDuration: { $round: ['$avgViewDuration', 2] },
-          totalArticles: { $size: '$totalArticles' },
-          totalVisitors: { $size: '$totalVisitors' },
-          bounceRate: {
-            $round: [
-              {
-                $multiply: [
-                  {
-                    $divide: [
-                      { $subtract: ['$totalViews', '$uniqueViews'] },
-                      '$totalViews'
-                    ]
-                  },
-                  100
-                ]
-              },
-              2
-            ]
-          }
+        $group: {
+          _id: null,
+          totalViews: { $sum: 1 },
+          uniqueViews: { $sum: { $cond: ['$isUniqueView', 1, 0] } },
+          totalArticles: { $addToSet: '$articleSlug' },
+          totalVisitors: { $addToSet: '$ipAddress' }
         }
       }
     ]);
 
-    // 2. Top Articles
-    const topArticles = await ArticleView.aggregate([
+    // Combine stats from both collections
+    const articleViewData = articleViewStats[0] || { totalViews: 0, uniqueViews: 0, avgViewDuration: 0, totalArticles: [], totalVisitors: [] };
+    const readerAnalyticsData = readerAnalyticsStats[0] || { totalViews: 0, uniqueViews: 0, totalArticles: [], totalVisitors: [] };
+
+    const overallStats = [{
+      totalViews: articleViewData.totalViews + readerAnalyticsData.totalViews,
+      uniqueViews: articleViewData.uniqueViews + readerAnalyticsData.uniqueViews,
+      avgViewDuration: articleViewData.avgViewDuration || 0,
+      totalArticles: [...new Set([...articleViewData.totalArticles, ...readerAnalyticsData.totalArticles])].length,
+      totalVisitors: [...new Set([...articleViewData.totalVisitors, ...readerAnalyticsData.totalVisitors])].length,
+      bounceRate: 0 // Calculate based on combined data
+    }];
+
+    // 2. Top Articles - Combine data from both collections
+    // Get top articles from ArticleView
+    const topArticlesFromViews = await ArticleView.aggregate([
       { $match: baseFilter },
       {
         $group: {
@@ -111,33 +120,71 @@ export async function GET(request: NextRequest) {
           avgViewDuration: { $avg: '$viewDuration' },
           lastViewed: { $max: '$viewedAt' }
         }
-      },
-      { $sort: { totalViews: -1 } },
-      { $limit: 10 },
+      }
+    ]);
+
+    // Get top articles from ReaderAnalytics
+    const topArticlesFromAnalytics = await ReaderAnalytics.aggregate([
+      { $match: readerAnalyticsFilter },
       {
-        $project: {
-          articleSlug: 1,
-          articleTitle: 1,
-          articleCategory: 1,
-          articleAuthor: 1,
-          totalViews: 1,
-          uniqueViews: 1,
-          avgViewDuration: { $round: ['$avgViewDuration', 2] },
-          lastViewed: 1,
-          engagementRate: {
-            $round: [
-              {
-                $multiply: [
-                  { $divide: ['$uniqueViews', '$totalViews'] },
-                  100
-                ]
-              },
-              2
-            ]
-          }
+        $group: {
+          _id: '$articleSlug',
+          articleSlug: { $first: '$articleSlug' },
+          articleTitle: { $first: '$articleTitle' },
+          totalViews: { $sum: 1 },
+          uniqueViews: { $sum: { $cond: ['$isUniqueView', 1, 0] } },
+          lastViewed: { $max: '$viewedAt' }
         }
       }
     ]);
+
+    // Combine and merge article data
+    const articleMap = new Map();
+
+    // Add ArticleView data
+    topArticlesFromViews.forEach(article => {
+      articleMap.set(article.articleSlug, {
+        articleSlug: article.articleSlug,
+        articleTitle: article.articleTitle,
+        articleCategory: article.articleCategory || 'Unknown',
+        articleAuthor: article.articleAuthor || 'Unknown',
+        totalViews: article.totalViews,
+        uniqueViews: article.uniqueViews,
+        avgViewDuration: article.avgViewDuration || 0,
+        lastViewed: article.lastViewed
+      });
+    });
+
+    // Add/merge ReaderAnalytics data
+    topArticlesFromAnalytics.forEach(article => {
+      const existing = articleMap.get(article.articleSlug);
+      if (existing) {
+        existing.totalViews += article.totalViews;
+        existing.uniqueViews += article.uniqueViews;
+        existing.lastViewed = new Date(Math.max(existing.lastViewed.getTime(), article.lastViewed.getTime()));
+      } else {
+        articleMap.set(article.articleSlug, {
+          articleSlug: article.articleSlug,
+          articleTitle: article.articleTitle,
+          articleCategory: 'Unknown',
+          articleAuthor: 'Unknown',
+          totalViews: article.totalViews,
+          uniqueViews: article.uniqueViews,
+          avgViewDuration: 0,
+          lastViewed: article.lastViewed
+        });
+      }
+    });
+
+    // Convert to array and sort by total views
+    const topArticles = Array.from(articleMap.values())
+      .sort((a, b) => b.totalViews - a.totalViews)
+      .slice(0, 10)
+      .map(article => ({
+        ...article,
+        avgViewDuration: Math.round(article.avgViewDuration * 100) / 100,
+        engagementRate: Math.round((article.uniqueViews / article.totalViews) * 100 * 100) / 100
+      }));
 
     // 3. Views Trend (daily for the period)
     const viewsTrend = await ArticleView.aggregate([
@@ -347,15 +394,29 @@ export async function GET(request: NextRequest) {
       }
     ]);
 
+    // Ensure proper data structure with defaults
+    const safeOverallStats = overallStats[0] || {
+      totalViews: 0,
+      uniqueViews: 0,
+      avgViewDuration: 0,
+      totalArticles: 0,
+      totalVisitors: 0,
+      bounceRate: 0
+    };
+
+    const safeDeviceAnalytics = deviceAnalytics[0] || {
+      deviceBreakdown: []
+    };
+
     return NextResponse.json({
       success: true,
       data: {
-        overallStats: overallStats[0] || {},
-        topArticles,
-        viewsTrend,
-        categoryPerformance,
-        geographicDistribution,
-        deviceAnalytics: deviceAnalytics[0] || {},
+        overallStats: safeOverallStats,
+        topArticles: topArticles || [],
+        viewsTrend: viewsTrend || [],
+        categoryPerformance: categoryPerformance || [],
+        geographicDistribution: geographicDistribution || [],
+        deviceAnalytics: safeDeviceAnalytics,
         period,
         dateRange: {
           startDate: startDate.toISOString(),

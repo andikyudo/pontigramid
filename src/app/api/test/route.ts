@@ -176,9 +176,36 @@ export async function POST(request: NextRequest) {
             if (directResult) {
               console.log('✅ ULTIMATE SUCCESS! New view count:', directResult.views);
 
+              // ALSO CREATE ANALYTICS RECORD FOR DASHBOARD
+              try {
+                const clientIP = request.headers.get('x-forwarded-for') ||
+                                request.headers.get('x-real-ip') ||
+                                '127.0.0.1';
+
+                const analyticsRecord = new ReaderAnalytics({
+                  articleSlug: directResult.slug,
+                  articleTitle: directResult.title,
+                  ipAddress: clientIP,
+                  userAgent: request.headers.get('user-agent') || 'Unknown',
+                  country: 'Indonesia',
+                  region: 'Kalimantan Barat',
+                  city: 'Pontianak',
+                  viewedAt: new Date(),
+                  isUniqueView: true,
+                  sessionId: body.sessionId || 'unknown-session',
+                  referrer: body.referrer || ''
+                });
+
+                await analyticsRecord.save();
+                console.log('📊 Analytics record created successfully');
+              } catch (analyticsError) {
+                console.log('⚠️ Analytics record creation failed:', analyticsError);
+                // Don't fail the main request if analytics fails
+              }
+
               return NextResponse.json({
                 success: true,
-                message: '🎉 ULTIMATE ANALYTICS v7.0 - DIRECT INCREMENT SUCCESSFUL!',
+                message: '🎉 ULTIMATE ANALYTICS v8.0 - DIRECT INCREMENT + ANALYTICS SUCCESSFUL!',
                 data: {
                   articleSlug: directResult.slug,
                   previousViews: existingArticle.views,

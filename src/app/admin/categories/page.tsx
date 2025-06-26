@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
 import CategoryManagement from '@/components/admin/CategoryManagement';
 
 export default function AdminCategoriesPage() {
@@ -17,9 +16,5 @@ export default function AdminCategoriesPage() {
     // }
   }, [router]);
 
-  return (
-    <AdminLayout>
-      <CategoryManagement />
-    </AdminLayout>
-  );
+  return <CategoryManagement />;
 }

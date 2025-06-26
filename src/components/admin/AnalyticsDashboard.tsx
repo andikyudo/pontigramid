@@ -116,12 +116,20 @@ export default function AnalyticsDashboard() {
       const response = await fetch(`/api/admin/analytics/dashboard?${params}`);
       if (response.ok) {
         const result = await response.json();
-        if (result.success) {
+        if (result.success && result.data) {
           setData(result.data);
+        } else {
+          console.error('Analytics API returned unsuccessful result:', result);
+          // Set empty data structure to prevent undefined errors
+          setData(null);
         }
+      } else {
+        console.error('Analytics API response not ok:', response.status, response.statusText);
+        setData(null);
       }
     } catch (error) {
       console.error('Error fetching analytics:', error);
+      setData(null);
     } finally {
       setLoading(false);
     }
@@ -131,16 +139,59 @@ export default function AnalyticsDashboard() {
     fetchAnalytics();
   }, [period, category, author]);
 
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
+  const formatNumber = (num: number | undefined | null) => {
+    // Handle undefined, null, or NaN values
+    if (num === undefined || num === null || isNaN(num)) {
+      return '0';
+    }
+
+    // Convert to number if it's a string
+    const numValue = typeof num === 'string' ? parseFloat(num) : num;
+
+    // Handle invalid numbers
+    if (isNaN(numValue)) {
+      return '0';
+    }
+
+    if (numValue >= 1000000) return (numValue / 1000000).toFixed(1) + 'M';
+    if (numValue >= 1000) return (numValue / 1000).toFixed(1) + 'K';
+    return numValue.toString();
   };
 
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
+  const formatDuration = (seconds: number | undefined | null) => {
+    // Handle undefined, null, or NaN values
+    if (seconds === undefined || seconds === null || isNaN(seconds)) {
+      return '0:00';
+    }
+
+    // Convert to number if it's a string
+    const numValue = typeof seconds === 'string' ? parseFloat(seconds) : seconds;
+
+    // Handle invalid numbers
+    if (isNaN(numValue) || numValue < 0) {
+      return '0:00';
+    }
+
+    const minutes = Math.floor(numValue / 60);
+    const remainingSeconds = Math.floor(numValue % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const safeToFixed = (num: number | undefined | null, decimals: number = 1) => {
+    // Handle undefined, null, or NaN values
+    if (num === undefined || num === null || isNaN(num)) {
+      return '0.0';
+    }
+
+    // Convert to number if it's a string
+    const numValue = typeof num === 'string' ? parseFloat(num) : num;
+
+    // Handle invalid numbers
+    if (isNaN(numValue)) {
+      return '0.0';
+    }
+
+    return numValue.toFixed(decimals);
   };
 
   if (loading) {
@@ -283,7 +334,7 @@ export default function AnalyticsDashboard() {
             <div>
               <p className="text-sm font-medium text-gray-600">Bounce Rate</p>
               <p className="text-2xl font-bold text-gray-900">
-                {safeData.overallStats.bounceRate.toFixed(1)}%
+                {safeToFixed(safeData.overallStats.bounceRate, 1)}%
               </p>
             </div>
             <div className="p-3 bg-red-100 rounded-full">
@@ -343,7 +394,7 @@ export default function AnalyticsDashboard() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ type, count, percent }) => `${type}: ${((percent || 0) * 100).toFixed(0)}%`}
+                label={({ type, count, percent }) => `${type}: ${safeToFixed((percent || 0) * 100, 0)}%`}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="count"
@@ -441,7 +492,7 @@ export default function AnalyticsDashboard() {
                     {formatDuration(article.avgViewDuration)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {article.engagementRate.toFixed(1)}%
+                    {safeToFixed(article.engagementRate, 1)}%
                   </td>
                 </tr>
               ))}
