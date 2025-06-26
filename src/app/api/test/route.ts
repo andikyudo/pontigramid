@@ -79,35 +79,64 @@ export async function POST(request: NextRequest) {
       await connectDB();
       console.log('Database connected successfully');
 
-      // DIRECT DATABASE WRITE TEST - PRIORITY EXECUTION
+      // ULTIMATE DATABASE WRITE TEST - FINAL VERSION
       if (body.articleSlug) {
-        console.log('🔥 ATTEMPTING DIRECT VIEW INCREMENT FOR:', body.articleSlug);
+        console.log('🔥 ULTIMATE TEST - ATTEMPTING DIRECT VIEW INCREMENT FOR:', body.articleSlug);
 
         try {
-          const directResult = await News.findOneAndUpdate(
-            { slug: body.articleSlug },
-            { $inc: { views: 1 } },
-            { new: true }
-          );
+          // First, let's find the article to confirm it exists
+          const existingArticle = await News.findOne({ slug: body.articleSlug });
+          console.log('📰 Found article:', existingArticle ? existingArticle.title : 'NOT FOUND');
+          console.log('📊 Current view count:', existingArticle ? existingArticle.views : 'N/A');
 
-          if (directResult) {
-            console.log('✅ DIRECT INCREMENT SUCCESS! New view count:', directResult.views);
+          if (existingArticle) {
+            // Now try to increment
+            const directResult = await News.findOneAndUpdate(
+              { slug: body.articleSlug },
+              { $inc: { views: 1 } },
+              { new: true }
+            );
 
+            if (directResult) {
+              console.log('✅ ULTIMATE SUCCESS! New view count:', directResult.views);
+
+              return NextResponse.json({
+                success: true,
+                message: '🎉 ULTIMATE ANALYTICS v7.0 - DIRECT INCREMENT SUCCESSFUL!',
+                data: {
+                  articleSlug: directResult.slug,
+                  previousViews: existingArticle.views,
+                  newViewCount: directResult.views,
+                  incrementWorked: directResult.views > existingArticle.views,
+                  title: directResult.title
+                },
+                timestamp: new Date().toISOString()
+              });
+            } else {
+              console.log('❌ Update operation failed');
+              return NextResponse.json({
+                success: false,
+                message: '❌ Update operation failed',
+                timestamp: new Date().toISOString()
+              });
+            }
+          } else {
+            console.log('❌ Article not found for slug:', body.articleSlug);
             return NextResponse.json({
-              success: true,
-              message: '🎉 ANALYTICS v6.0 - DIRECT INCREMENT SUCCESSFUL!',
-              data: {
-                articleSlug: directResult.slug,
-                newViewCount: directResult.views,
-                title: directResult.title
-              },
+              success: false,
+              message: '❌ Article not found',
+              data: { articleSlug: body.articleSlug },
               timestamp: new Date().toISOString()
             });
-          } else {
-            console.log('❌ Article not found for direct increment:', body.articleSlug);
           }
         } catch (directError) {
-          console.error('❌ DIRECT INCREMENT ERROR:', directError);
+          console.error('❌ ULTIMATE TEST ERROR:', directError);
+          return NextResponse.json({
+            success: false,
+            message: '❌ Database operation failed',
+            error: directError instanceof Error ? directError.message : 'Unknown error',
+            timestamp: new Date().toISOString()
+          });
         }
       }
 
