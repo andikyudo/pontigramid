@@ -32,7 +32,7 @@ export default function SimpleViewTracker({ articleSlug, articleTitle }: SimpleV
         sessionId
       };
 
-      const response = await fetch('/api/test', {
+      const response = await fetch('/api/analytics-production-test', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
