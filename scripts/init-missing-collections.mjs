@@ -306,6 +306,34 @@ async function initializeMissingCollections() {
       console.log('ℹ️  Advertisement model not found, skipping advertisement indexes');
     }
 
+    // ArticleView indexes (if ArticleView model exists)
+    try {
+      const ArticleView = mongoose.model('ArticleView');
+      await ArticleView.collection.createIndex({ articleId: 1, viewedAt: -1 });
+      await ArticleView.collection.createIndex({ articleCategory: 1, viewedAt: -1 });
+      await ArticleView.collection.createIndex({ 'location.district': 1, viewedAt: -1 });
+      await ArticleView.collection.createIndex({ 'location.city': 1, articleCategory: 1 });
+      await ArticleView.collection.createIndex({ viewedAt: -1, isUniqueView: 1 });
+      await ArticleView.collection.createIndex({ ipAddress: 1, articleId: 1, viewedAt: -1 });
+      await ArticleView.collection.createIndex({ articleSlug: 1 });
+      await ArticleView.collection.createIndex({ visitorId: 1 });
+      await ArticleView.collection.createIndex({ sessionId: 1 });
+      console.log('✅ ArticleView indexes created');
+    } catch (error) {
+      console.log('ℹ️  ArticleView model not found, skipping article view indexes');
+    }
+
+    // GeographicAnalytics indexes (if GeographicAnalytics model exists)
+    try {
+      const GeographicAnalytics = mongoose.model('GeographicAnalytics');
+      await GeographicAnalytics.collection.createIndex({ date: -1, 'location.district': 1 });
+      await GeographicAnalytics.collection.createIndex({ 'location.city': 1, date: -1 });
+      await GeographicAnalytics.collection.createIndex({ date: -1, 'metrics.totalViews': -1 });
+      console.log('✅ GeographicAnalytics indexes created');
+    } catch (error) {
+      console.log('ℹ️  GeographicAnalytics model not found, skipping geographic analytics indexes');
+    }
+
     console.log('✅ Database indexes created successfully!');
 
     // Final status check
