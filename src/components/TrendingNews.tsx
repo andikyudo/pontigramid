@@ -35,6 +35,7 @@ const categoryColors: { [key: string]: string } = {
 
 function TrendingNews() {
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const [imageLoaded, setImageLoaded] = useState<Record<string, boolean>>({});
 
   const { ref, inView } = useInView({
     triggerOnce: true,
@@ -46,6 +47,10 @@ function TrendingNews() {
 
   const handleImageError = (slug: string) => {
     setImageErrors(prev => ({ ...prev, [slug]: true }));
+  };
+
+  const handleImageLoad = (slug: string) => {
+    setImageLoaded(prev => ({ ...prev, [slug]: true }));
   };
 
 
@@ -113,8 +118,10 @@ function TrendingNews() {
                                 fill
                                 className="object-cover rounded-l-lg"
                                 sizes="96px"
-                                onError={() => handleImageError(news.slug)}
                                 priority={false}
+                                quality={85}
+                                placeholder="blur"
+                                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+Rw="
                               />
                             )
                           ) : (
@@ -201,7 +208,7 @@ function TrendingNews() {
                   
                   {/* Image */}
                   <Link href={`/berita/${news.slug}`}>
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative h-48 overflow-hidden bg-gray-100 trending-news-container">
                       {news.imageUrl && !imageErrors[news.slug] ? (
                         news.imageUrl.startsWith('data:') ? (
                           <img
@@ -209,18 +216,31 @@ function TrendingNews() {
                             alt={news.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={() => handleImageError(news.slug)}
+                            onLoad={() => handleImageLoad(news.slug)}
                             loading="lazy"
+                            style={{ display: 'block' }}
                           />
                         ) : (
-                          <Image
-                            src={news.imageUrl}
-                            alt={news.title}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            onError={() => handleImageError(news.slug)}
-                            priority={index < 2}
-                          />
+                          <div className="relative w-full h-full trending-news-image">
+                            <Image
+                              src={news.imageUrl}
+                              alt={news.title}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 400px"
+                              priority={index < 2}
+                              quality={85}
+                              placeholder="blur"
+                              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+Rw="
+                              onLoad={() => handleImageLoad(news.slug)}
+                              onError={() => handleImageError(news.slug)}
+                              style={{
+                                objectFit: 'cover',
+                                width: '100%',
+                                height: '100%'
+                              }}
+                            />
+                          </div>
                         )
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
@@ -297,6 +317,29 @@ function TrendingNews() {
           </div>
         )}
       </div>
+
+      {/* Desktop-specific CSS fixes */}
+      <style jsx>{`
+        @media (min-width: 640px) {
+          .trending-news-image {
+            position: relative !important;
+            width: 100% !important;
+            height: 100% !important;
+            display: block !important;
+          }
+
+          .trending-news-image img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            display: block !important;
+          }
+
+          .trending-news-container {
+            background-color: #f3f4f6 !important;
+          }
+        }
+      `}</style>
     </section>
   );
 }
