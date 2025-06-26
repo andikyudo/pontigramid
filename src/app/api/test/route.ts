@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
   console.log('🚀 POST REQUEST RECEIVED - Analytics tracking starting');
   try {
     const body = await request.json();
-    console.log('📦 NEW ANALYTICS SYSTEM v5.0 - POST body received:', body);
+    console.log('📦 FINAL ANALYTICS SYSTEM v6.0 - POST body received:', body);
 
     // NEW ANALYTICS SYSTEM - Always attempt tracking
     try {
@@ -78,6 +78,38 @@ export async function POST(request: NextRequest) {
 
       await connectDB();
       console.log('Database connected successfully');
+
+      // DIRECT DATABASE WRITE TEST - PRIORITY EXECUTION
+      if (body.articleSlug) {
+        console.log('🔥 ATTEMPTING DIRECT VIEW INCREMENT FOR:', body.articleSlug);
+
+        try {
+          const directResult = await News.findOneAndUpdate(
+            { slug: body.articleSlug },
+            { $inc: { views: 1 } },
+            { new: true }
+          );
+
+          if (directResult) {
+            console.log('✅ DIRECT INCREMENT SUCCESS! New view count:', directResult.views);
+
+            return NextResponse.json({
+              success: true,
+              message: '🎉 ANALYTICS v6.0 - DIRECT INCREMENT SUCCESSFUL!',
+              data: {
+                articleSlug: directResult.slug,
+                newViewCount: directResult.views,
+                title: directResult.title
+              },
+              timestamp: new Date().toISOString()
+            });
+          } else {
+            console.log('❌ Article not found for direct increment:', body.articleSlug);
+          }
+        } catch (directError) {
+          console.error('❌ DIRECT INCREMENT ERROR:', directError);
+        }
+      }
 
       // Use provided articleSlug or default
       const articleSlug = body.articleSlug || 'test-default-article';
