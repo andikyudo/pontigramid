@@ -139,11 +139,59 @@ export async function GET(request: NextRequest) {
   });
 }
 
+// Handle engagement tracking (duration, scroll)
+async function handleEngagementTracking(body: any) {
+  try {
+    const { connectDB } = await import('@/lib/mongodb');
+    const ReaderAnalytics = (await import('@/models/ReaderAnalytics')).default;
+
+    await connectDB();
+
+    const { articleSlug, sessionId, action, viewDuration, scrollDepth } = body;
+
+    // Update existing analytics record with engagement data
+    const updateData: any = {};
+    if (action === 'track-duration' && viewDuration) {
+      updateData.viewDuration = viewDuration;
+    }
+    if (action === 'track-scroll' && scrollDepth) {
+      updateData.scrollDepth = scrollDepth;
+    }
+
+    const result = await ReaderAnalytics.findOneAndUpdate(
+      { articleSlug, sessionId },
+      { $set: updateData },
+      { new: true, sort: { viewedAt: -1 } }
+    );
+
+    console.log(`📊 ${action} updated:`, result ? 'Success' : 'Not found');
+
+    return NextResponse.json({
+      success: true,
+      message: `${action} tracked successfully`,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error(`❌ ${body.action} tracking failed:`, error);
+    return NextResponse.json({
+      success: false,
+      message: `${body.action} tracking failed`,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   console.log('🚀 POST REQUEST RECEIVED - Analytics tracking starting');
   try {
     const body = await request.json();
-    console.log('📦 FINAL ANALYTICS SYSTEM v6.0 - POST body received:', body);
+    console.log('📦 ENHANCED ANALYTICS SYSTEM v8.2 - POST body received:', body);
+
+    // Handle engagement tracking actions
+    if (body.action === 'track-duration' || body.action === 'track-scroll') {
+      return await handleEngagementTracking(body);
+    }
 
     // NEW ANALYTICS SYSTEM - Always attempt tracking
     try {
@@ -180,24 +228,54 @@ export async function POST(request: NextRequest) {
               try {
                 const clientIP = request.headers.get('x-forwarded-for') ||
                                 request.headers.get('x-real-ip') ||
+                                request.headers.get('cf-connecting-ip') ||
                                 '127.0.0.1';
+
+                // Enhanced analytics data from client
+                const clientInfo = body.clientInfo || {};
+                const userAgent = body.userAgent || request.headers.get('user-agent') || 'Unknown';
+
+                // Determine if this is a unique view (simple check by IP + article + day)
+                const today = new Date().toISOString().split('T')[0];
+                const existingView = await ReaderAnalytics.findOne({
+                  articleSlug: directResult.slug,
+                  ipAddress: clientIP,
+                  viewedAt: {
+                    $gte: new Date(today + 'T00:00:00.000Z'),
+                    $lt: new Date(today + 'T23:59:59.999Z')
+                  }
+                });
 
                 const analyticsRecord = new ReaderAnalytics({
                   articleSlug: directResult.slug,
                   articleTitle: directResult.title,
+                  articleCategory: body.articleCategory || 'Uncategorized',
+                  articleAuthor: body.articleAuthor || 'Unknown',
                   ipAddress: clientIP,
-                  userAgent: request.headers.get('user-agent') || 'Unknown',
+                  userAgent: userAgent,
                   country: 'Indonesia',
                   region: 'Kalimantan Barat',
                   city: 'Pontianak',
-                  viewedAt: new Date(),
-                  isUniqueView: true,
+                  viewedAt: new Date(body.timestamp || Date.now()),
+                  isUniqueView: !existingView,
                   sessionId: body.sessionId || 'unknown-session',
-                  referrer: body.referrer || ''
+                  referrer: body.referrer || '',
+                  // Enhanced client data
+                  url: clientInfo.url || '',
+                  pathname: clientInfo.pathname || '',
+                  language: clientInfo.language || 'id',
+                  platform: clientInfo.platform || 'Unknown',
+                  screenResolution: clientInfo.screenWidth && clientInfo.screenHeight ?
+                    `${clientInfo.screenWidth}x${clientInfo.screenHeight}` : 'Unknown',
+                  viewportSize: clientInfo.viewportWidth && clientInfo.viewportHeight ?
+                    `${clientInfo.viewportWidth}x${clientInfo.viewportHeight}` : 'Unknown',
+                  timezone: clientInfo.timezone || 'Asia/Jakarta',
+                  deviceType: userAgent.includes('Mobile') ? 'Mobile' :
+                             userAgent.includes('Tablet') ? 'Tablet' : 'Desktop'
                 });
 
                 await analyticsRecord.save();
-                console.log('📊 Analytics record created successfully');
+                console.log('📊 Enhanced analytics record created successfully');
               } catch (analyticsError) {
                 console.log('⚠️ Analytics record creation failed:', analyticsError);
                 // Don't fail the main request if analytics fails
@@ -205,7 +283,7 @@ export async function POST(request: NextRequest) {
 
               return NextResponse.json({
                 success: true,
-                message: '🎉 ULTIMATE ANALYTICS v8.1 - DIRECT INCREMENT + ANALYTICS SUCCESSFUL!',
+                message: '🎉 ULTIMATE ANALYTICS v8.2 - DIRECT INCREMENT + ANALYTICS SUCCESSFUL!',
                 data: {
                   articleSlug: directResult.slug,
                   previousViews: existingArticle.views,

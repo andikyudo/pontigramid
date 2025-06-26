@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 export interface IReaderAnalytics extends mongoose.Document {
   articleSlug: string;
   articleTitle: string;
+  articleCategory?: string;
+  articleAuthor?: string;
   ipAddress: string;
   userAgent: string;
   country: string;
@@ -13,6 +15,17 @@ export interface IReaderAnalytics extends mongoose.Document {
   isUniqueView: boolean;
   sessionId: string;
   referrer: string;
+  // Enhanced client tracking fields
+  url?: string;
+  pathname?: string;
+  language?: string;
+  platform?: string;
+  screenResolution?: string;
+  viewportSize?: string;
+  timezone?: string;
+  deviceType?: string;
+  scrollDepth?: number;
+  viewDuration?: number;
 }
 
 const ReaderAnalyticsSchema = new mongoose.Schema<IReaderAnalytics>({
@@ -26,7 +39,15 @@ const ReaderAnalyticsSchema = new mongoose.Schema<IReaderAnalytics>({
     type: String,
     required: true
   },
-  
+  articleCategory: {
+    type: String,
+    default: 'Uncategorized'
+  },
+  articleAuthor: {
+    type: String,
+    default: 'Unknown'
+  },
+
   // Reader information
   ipAddress: {
     type: String,
@@ -70,6 +91,49 @@ const ReaderAnalyticsSchema = new mongoose.Schema<IReaderAnalytics>({
   referrer: {
     type: String,
     default: ''
+  },
+
+  // Enhanced client tracking fields
+  url: {
+    type: String,
+    default: ''
+  },
+  pathname: {
+    type: String,
+    default: ''
+  },
+  language: {
+    type: String,
+    default: 'id'
+  },
+  platform: {
+    type: String,
+    default: 'Unknown'
+  },
+  screenResolution: {
+    type: String,
+    default: 'Unknown'
+  },
+  viewportSize: {
+    type: String,
+    default: 'Unknown'
+  },
+  timezone: {
+    type: String,
+    default: 'Asia/Jakarta'
+  },
+  deviceType: {
+    type: String,
+    enum: ['Desktop', 'Mobile', 'Tablet'],
+    default: 'Desktop'
+  },
+  scrollDepth: {
+    type: Number,
+    default: 0
+  },
+  viewDuration: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true,

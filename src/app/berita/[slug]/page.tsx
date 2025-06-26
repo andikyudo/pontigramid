@@ -9,7 +9,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SocialShareButtons from '@/components/SocialShareButtons';
 import RelatedNews from '@/components/RelatedNews';
-import SimpleViewTracker from '@/components/SimpleViewTracker';
+import ViewTracker from '@/components/analytics/ViewTracker';
 import { useNewsArticle } from '@/hooks/useNews';
 import { useParams } from 'next/navigation';
 
@@ -80,10 +80,12 @@ export default function NewsDetail() {
     <div className="min-h-screen bg-gray-50">
       <Header currentCategory={news.category} />
 
-      {/* View Tracking */}
-      <SimpleViewTracker
+      {/* Enhanced View Tracking */}
+      <ViewTracker
         articleSlug={news.slug}
         articleTitle={news.title}
+        articleCategory={news.category}
+        articleAuthor={news.author}
       />
 
       {/* Social Share Buttons */}
