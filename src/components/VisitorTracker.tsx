@@ -30,7 +30,9 @@ export default function VisitorTracker() {
         });
       } catch (error) {
         // Silently fail - don't disrupt user experience
-        console.log('Visitor tracking failed:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Visitor tracking failed:', error);
+        }
       }
     };
 

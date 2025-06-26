@@ -85,52 +85,32 @@ export default function EventRunningTextOptimized({
       setIsLoading(true);
       setHasError(false);
 
-      console.log('EventRunningTextOptimized: Fetching events from /api/public-events...');
       const response = await fetch('/api/public-events?upcoming=true&limit=10', {
         next: { revalidate: 300 }, // Cache for 5 minutes
         headers: {
           'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
         }
       });
-      console.log('EventRunningTextOptimized: Response status:', response.status);
-      console.log('EventRunningTextOptimized: Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (response.ok) {
         const data = await response.json();
-        console.log('EventRunningTextOptimized: API Response:', data);
 
         if (data.success && data.data && Array.isArray(data.data)) {
-          console.log('EventRunningTextOptimized: Found', data.data.length, 'real events from database');
           setEvents(data.data); // Only use real events from database
           setHasError(false);
         } else {
-          console.log('EventRunningTextOptimized: No real events found in database');
-          console.log('EventRunningTextOptimized: Data structure:', {
-            success: data.success,
-            hasData: !!data.data,
-            isArray: Array.isArray(data.data),
-            length: data.data?.length
-          });
           setEvents([]); // Set empty array if no events
           setHasError(false);
         }
       } else {
-        console.error('EventRunningTextOptimized: API request failed with status:', response.status);
-        const errorText = await response.text();
-        console.error('EventRunningTextOptimized: Error response:', errorText.substring(0, 500));
-
-        // Check if it's a Vercel authentication issue
-        if (response.status === 401 || errorText.includes('Authentication Required') || errorText.includes('vercel.com/sso-api')) {
-          console.error('EventRunningTextOptimized: Vercel authentication protection detected');
-          setEvents([]);
-          setHasError(true);
-        } else {
-          setEvents([]);
-          setHasError(true);
-        }
+        // API request failed
+        setEvents([]);
+        setHasError(true);
       }
     } catch (error) {
-      console.error('EventRunningTextOptimized: Error fetching events:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('EventRunningTextOptimized: Error fetching events:', error);
+      }
       setEvents([]);
       setHasError(true);
     } finally {
@@ -246,31 +226,8 @@ export default function EventRunningTextOptimized({
     );
   }
 
-  // Show error state
-  if (hasError) {
-    return (
-      <div className={`relative overflow-hidden bg-gradient-to-r from-yellow-800 via-yellow-900 to-black backdrop-blur-sm border-b border-yellow-600/50 ${className}`}>
-        <div className="flex items-center px-4 py-3 sm:py-4">
-          <div className="flex-shrink-0 mr-3 sm:mr-4">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-yellow-700 flex items-center justify-center">
-              <span className="text-white text-lg">🔒</span>
-            </div>
-          </div>
-          <div className="flex-1">
-            <h3 className="text-white font-semibold text-sm sm:text-base mb-1">
-              Event API Terlindungi
-            </h3>
-            <p className="text-yellow-200 text-xs sm:text-sm">
-              API event sedang dalam mode pengembangan. Event akan ditampilkan setelah konfigurasi selesai.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show empty state when no events available
-  if (events.length === 0) {
+  // Show error state or empty state when no events
+  if (hasError || events.length === 0) {
     return (
       <div className={`relative overflow-hidden bg-gradient-to-r from-slate-800 via-slate-900 to-black backdrop-blur-sm border-b border-slate-600/50 ${className}`}>
         <div className="flex items-center px-4 py-3 sm:py-4">
@@ -281,16 +238,21 @@ export default function EventRunningTextOptimized({
           </div>
           <div className="flex-1">
             <h3 className="text-white font-semibold text-sm sm:text-base mb-1">
-              Belum Ada Event
+              {hasError ? 'Event Tidak Tersedia' : 'Belum Ada Event'}
             </h3>
             <p className="text-gray-300 text-xs sm:text-sm">
-              Saat ini belum ada event yang tersedia. Pantau terus untuk update terbaru!
+              {hasError
+                ? 'Terjadi masalah saat memuat event. Silakan coba lagi nanti.'
+                : 'Saat ini belum ada event yang tersedia. Pantau terus untuk update terbaru!'
+              }
             </p>
           </div>
         </div>
       </div>
     );
   }
+
+
 
   const currentEvent = events[currentIndex];
 

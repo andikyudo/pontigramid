@@ -282,6 +282,30 @@ async function initializeMissingCollections() {
     await Visitor.collection.createIndex({ country: 1 });
     await Visitor.collection.createIndex({ isBlocked: 1 });
 
+    // Event indexes (if Event model exists)
+    try {
+      const Event = mongoose.model('Event');
+      await Event.collection.createIndex({ isActive: 1, date: 1 });
+      await Event.collection.createIndex({ category: 1, isActive: 1 });
+      await Event.collection.createIndex({ isFeatured: 1, isActive: 1 });
+      await Event.collection.createIndex({ slug: 1 }, { unique: true });
+      await Event.collection.createIndex({ title: 'text', description: 'text', organizer: 'text', location: 'text' });
+      console.log('✅ Event indexes created');
+    } catch (error) {
+      console.log('ℹ️  Event model not found, skipping event indexes');
+    }
+
+    // Advertisement indexes (if Advertisement model exists)
+    try {
+      const Advertisement = mongoose.model('Advertisement');
+      await Advertisement.collection.createIndex({ placementZone: 1, isActive: 1, priority: -1 });
+      await Advertisement.collection.createIndex({ startDate: 1, endDate: 1 });
+      await Advertisement.collection.createIndex({ createdAt: -1 });
+      console.log('✅ Advertisement indexes created');
+    } catch (error) {
+      console.log('ℹ️  Advertisement model not found, skipping advertisement indexes');
+    }
+
     console.log('✅ Database indexes created successfully!');
 
     // Final status check

@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import Event from '@/models/Event';
 
+interface EventFilter {
+  isActive: boolean;
+  category?: string;
+  isFeatured?: boolean;
+  date?: { $gte: Date };
+  $or?: Array<{
+    title?: { $regex: string; $options: string };
+    description?: { $regex: string; $options: string };
+    organizer?: { $regex: string; $options: string };
+    location?: { $regex: string; $options: string };
+  }>;
+}
+
 // GET - Fetch active events for public display
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +29,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
 
     // Build filter query
-    const filter: any = {
+    const filter: EventFilter = {
       isActive: true
     };
     

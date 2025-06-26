@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { memo } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { formatDateShort, truncateText } from '@/lib/utils';
 import { Calendar, User } from 'lucide-react';
@@ -99,3 +100,5 @@ export default function NewsCard({ news }: NewsCardProps) {
     </Card>
   );
 }
+
+export default memo(NewsCard);

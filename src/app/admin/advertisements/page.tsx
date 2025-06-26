@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,6 @@ import {
   EyeOff,
   Filter,
   BarChart3,
-  Calendar,
-  MapPin,
   ExternalLink
 } from 'lucide-react';
 
@@ -44,11 +42,7 @@ export default function AdvertisementsPage() {
   const [filterZone, setFilterZone] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
-  useEffect(() => {
-    fetchAdvertisements();
-  }, [searchTerm, filterZone, filterStatus]);
-
-  const fetchAdvertisements = async () => {
+  const fetchAdvertisements = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
@@ -57,16 +51,23 @@ export default function AdvertisementsPage() {
 
       const response = await fetch(`/api/admin/advertisements?${params}`);
       const data = await response.json();
-      
+
       if (data.success) {
         setAdvertisements(data.data);
+        setTotalPages(data.pagination.pages);
       }
     } catch (error) {
       console.error('Error fetching advertisements:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, filterZone, filterStatus]);
+
+  useEffect(() => {
+    fetchAdvertisements();
+  }, [fetchAdvertisements]);
+
+
 
   const handleDelete = async (id: string) => {
     if (!confirm('Apakah Anda yakin ingin menghapus iklan ini?')) return;

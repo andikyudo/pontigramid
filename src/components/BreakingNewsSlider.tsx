@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -263,3 +264,5 @@ export default function BreakingNewsSlider() {
     </section>
   );
 }
+
+export default memo(BreakingNewsSlider);

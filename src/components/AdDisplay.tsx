@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
 
@@ -25,11 +25,7 @@ export default function AdDisplay({ zone, limit = 1, className = '' }: AdDisplay
   const [loading, setLoading] = useState(true);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    fetchAds();
-  }, [zone, limit]);
-
-  const fetchAds = async () => {
+  const fetchAds = useCallback(async () => {
     try {
       const response = await fetch(`/api/advertisements?zone=${zone}&limit=${limit}`);
       const data = await response.json();
@@ -38,11 +34,17 @@ export default function AdDisplay({ zone, limit = 1, className = '' }: AdDisplay
         setAds(data.data);
       }
     } catch (error) {
-      console.error('Error fetching ads:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching ads:', error);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [zone, limit]);
+
+  useEffect(() => {
+    fetchAds();
+  }, [fetchAds]);
 
   const handleAdClick = async (adId: string, linkUrl?: string) => {
     try {
@@ -60,7 +62,9 @@ export default function AdDisplay({ zone, limit = 1, className = '' }: AdDisplay
         window.open(linkUrl, '_blank', 'noopener,noreferrer');
       }
     } catch (error) {
-      console.error('Error tracking ad click:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error tracking ad click:', error);
+      }
       // Still open link even if tracking fails
       if (linkUrl) {
         window.open(linkUrl, '_blank', 'noopener,noreferrer');
@@ -177,3 +181,5 @@ export default function AdDisplay({ zone, limit = 1, className = '' }: AdDisplay
     </div>
   );
 }
+
+export default memo(AdDisplay);

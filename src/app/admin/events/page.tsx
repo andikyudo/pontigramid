@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -15,11 +15,9 @@ import {
   EyeOff,
   Filter,
   Calendar,
-  MapPin,
   Users,
   Star,
   Clock,
-  Settings,
   Zap
 } from 'lucide-react';
 import EventRunningTextSettings from '@/components/admin/EventRunningTextSettings';
@@ -57,11 +55,7 @@ export default function EventsPage() {
   const [filterStatus, setFilterStatus] = useState('');
   const [activeTab, setActiveTab] = useState('events');
 
-  useEffect(() => {
-    fetchEvents();
-  }, [searchTerm, filterCategory, filterStatus]);
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
@@ -79,7 +73,11 @@ export default function EventsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, filterCategory, filterStatus]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Apakah Anda yakin ingin menghapus event ini?')) return;

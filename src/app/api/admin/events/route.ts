@@ -3,6 +3,19 @@ import { connectDB } from '@/lib/mongodb';
 import Event from '@/models/Event';
 import { verifyAuth } from '@/lib/auth';
 
+interface AdminEventFilter {
+  $or?: Array<{
+    title?: { $regex: string; $options: string };
+    description?: { $regex: string; $options: string };
+    organizer?: { $regex: string; $options: string };
+    location?: { $regex: string; $options: string };
+  }>;
+  category?: string;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  date?: { $gte: Date };
+}
+
 // GET - Fetch all events with filtering
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +31,7 @@ export async function GET(request: NextRequest) {
     const upcoming = searchParams.get('upcoming');
 
     // Build filter query
-    const filter: any = {};
+    const filter: AdminEventFilter = {};
     
     if (search) {
       filter.$or = [
@@ -178,7 +191,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create event data
-    const eventData: any = {
+    const eventData = {
       title,
       description,
       imageUrl,
@@ -231,18 +244,19 @@ export async function POST(request: NextRequest) {
       data: event
     }, { status: 201 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating event:', error);
-    
-    if (error.name === 'ValidationError') {
-      const errors = Object.values(error.errors).map((err: any) => err.message);
+
+    if (error instanceof Error && error.name === 'ValidationError') {
+      const validationError = error as any; // MongoDB validation error type
+      const errors = Object.values(validationError.errors).map((err: any) => err.message);
       return NextResponse.json(
         { success: false, error: errors.join(', ') },
         { status: 400 }
       );
     }
 
-    if (error.code === 11000) {
+    if (error instanceof Error && (error as any).code === 11000) {
       return NextResponse.json(
         { success: false, error: 'Slug event sudah digunakan' },
         { status: 400 }

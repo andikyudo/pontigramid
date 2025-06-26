@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import TeamMember from '@/models/TeamMember';
 
 // GET - Fetch active team members for public display
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     await connectDB();
 

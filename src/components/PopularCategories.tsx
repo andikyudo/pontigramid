@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { memo } from 'react';
 import Link from 'next/link';
 import {
   Briefcase,
@@ -12,7 +12,6 @@ import {
   GraduationCap,
   Globe,
   ArrowRight,
-  Loader2,
   Scale,
   Users,
   Palette
@@ -133,7 +132,7 @@ const categoriesConfig: CategoryData[] = [
 ];
 
 export default function PopularCategories() {
-  const { ref, inView } = useInView({
+  const { ref } = useInView({
     triggerOnce: true,
     threshold: 0.1,
   });
@@ -142,7 +141,7 @@ export default function PopularCategories() {
   const { data: categories = [], isLoading: loading, isError, error } = useCategoryCounts();
 
   // Map icon strings to actual icon components
-  const iconMap: Record<string, any> = {
+  const iconMap: Record<string, React.ComponentType<any>> = {
     Users: Briefcase,
     TrendingUp: TrendingUp,
     Trophy: Gamepad2,
@@ -322,3 +321,5 @@ export default function PopularCategories() {
     </section>
   );
 }
+
+export default memo(PopularCategories);

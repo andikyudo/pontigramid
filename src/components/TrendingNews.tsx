@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { TrendingUp, Calendar, User, Eye } from 'lucide-react';
@@ -300,3 +300,5 @@ export default function TrendingNews() {
     </section>
   );
 }
+
+export default memo(TrendingNews);

@@ -4,6 +4,15 @@ import Advertisement from '@/models/Advertisement';
 import { verifyAuth } from '@/lib/auth';
 import { compressImage } from '@/lib/imageUtils';
 
+interface AdvertisementFilter {
+  $or?: Array<{
+    title?: { $regex: string; $options: string };
+    description?: { $regex: string; $options: string };
+  }>;
+  placementZone?: string;
+  isActive?: boolean;
+}
+
 // GET - Fetch all advertisements with filtering
 export async function GET(request: NextRequest) {
   try {
@@ -17,7 +26,7 @@ export async function GET(request: NextRequest) {
     const isActive = searchParams.get('isActive');
 
     // Build filter query
-    const filter: any = {};
+    const filter: AdvertisementFilter = {};
     
     if (search) {
       filter.$or = [
@@ -122,7 +131,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create advertisement data
-    const advertisementData: any = {
+    const advertisementData = {
       title,
       description,
       imageUrl,
@@ -151,11 +160,12 @@ export async function POST(request: NextRequest) {
       data: advertisement
     }, { status: 201 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating advertisement:', error);
-    
-    if (error.name === 'ValidationError') {
-      const errors = Object.values(error.errors).map((err: any) => err.message);
+
+    if (error instanceof Error && error.name === 'ValidationError') {
+      const validationError = error as any; // MongoDB validation error type
+      const errors = Object.values(validationError.errors).map((err: any) => (err as any).message);
       return NextResponse.json(
         { success: false, error: errors.join(', ') },
         { status: 400 }

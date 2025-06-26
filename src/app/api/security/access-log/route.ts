@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/mongodb';
 
 // Simple in-memory rate limiting (in production, use Redis or database)
 const accessAttempts = new Map<string, { count: number; lastAttempt: number }>();
@@ -29,7 +28,9 @@ export async function POST(request: NextRequest) {
         
         // If too many attempts, return error
         if (existing.count > 10) {
-          console.warn(`Rate limit exceeded for ${ip} - ${userAgent}`);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`Rate limit exceeded for ${ip} - ${userAgent}`);
+          }
           return NextResponse.json(
             { success: false, error: 'Too many requests' },
             { status: 429 }
@@ -40,17 +41,16 @@ export async function POST(request: NextRequest) {
       accessAttempts.set(clientKey, { count: 1, lastAttempt: now });
     }
 
-    // Log the access attempt
-    console.log(`Admin portal access attempt:`, {
-      ip,
-      userAgent,
-      path,
-      timestamp: new Date(timestamp).toISOString(),
-      count: accessAttempts.get(clientKey)?.count || 1
-    });
-
-    // In production, you might want to store this in a database
-    // For now, we'll just log it to console
+    // Log the access attempt (only in development)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Admin portal access attempt:`, {
+        ip,
+        userAgent,
+        path,
+        timestamp: new Date(timestamp).toISOString(),
+        count: accessAttempts.get(clientKey)?.count || 1
+      });
+    }
     
     return NextResponse.json({ success: true });
 
