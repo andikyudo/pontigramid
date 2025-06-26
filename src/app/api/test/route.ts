@@ -30,10 +30,10 @@ export async function GET(request: NextRequest) {
           viewsCount,
           articlesCount,
           sampleArticle: sampleArticle ? {
-            id: sampleArticle._id,
-            title: sampleArticle.title,
-            slug: sampleArticle.slug,
-            views: sampleArticle.views || 0
+            id: (sampleArticle as any)._id,
+            title: (sampleArticle as any).title,
+            slug: (sampleArticle as any).slug,
+            views: (sampleArticle as any).views || 0
           } : null,
           dbConnected: true,
           url: request.url,
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       let article = null;
       try {
         article = await News.findOne({ slug: articleSlug }).lean();
-        console.log('Article lookup result:', article ? `Found: ${article.title}` : 'Not found');
+        console.log('Article lookup result:', article ? `Found: ${(article as any).title}` : 'Not found');
       } catch (err) {
         console.log('Article lookup error:', err);
       }

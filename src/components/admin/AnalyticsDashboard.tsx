@@ -113,7 +113,7 @@ export default function AnalyticsDashboard() {
         ...(author && { author })
       });
 
-      const response = await fetch(`/api/admin-analytics?${params}`);
+      const response = await fetch(`/api/analytics/dashboard?${params}`);
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
