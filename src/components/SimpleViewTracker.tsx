@@ -32,7 +32,7 @@ export default function SimpleViewTracker({ articleSlug, articleTitle }: SimpleV
         sessionId
       };
 
-      const response = await fetch('/api/analytics/track', {
+      const response = await fetch('/api/test', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -56,29 +56,7 @@ export default function SimpleViewTracker({ articleSlug, articleTitle }: SimpleV
       console.error('Error tracking view:', error);
       hasTrackedView.current = false; // Allow retry
       
-      // Fallback: try test endpoint with new analytics
-      try {
-        console.log('Trying fallback tracking via test endpoint...');
-        const fallbackResponse = await fetch('/api/test', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            articleSlug,
-            sessionId,
-            referrer: typeof window !== 'undefined' ? document.referrer || '' : ''
-          })
-        });
-
-        if (fallbackResponse.ok) {
-          const fallbackResult = await fallbackResponse.json();
-          console.log('Fallback tracking successful:', fallbackResult);
-          hasTrackedView.current = true;
-        }
-      } catch (fallbackError) {
-        console.error('Fallback tracking also failed:', fallbackError);
-      }
+      // No fallback needed since we're using the primary working endpoint
     }
   };
 
