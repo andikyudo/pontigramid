@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('POST body received:', body);
 
-    // Always try to track view if articleSlug is provided
+    // DIRECT TRACKING TEST - Always try to track view if articleSlug is provided
     if (body.articleSlug) {
       try {
         // Import dependencies dynamically
@@ -81,8 +81,9 @@ export async function POST(request: NextRequest) {
         let article = null;
         try {
           article = await News.findOne({ slug: body.articleSlug }).lean();
+          console.log('Article lookup result:', article ? `Found: ${article.title}` : 'Not found');
         } catch (err) {
-          console.log('Article not found, using test data');
+          console.log('Article lookup error:', err);
         }
 
         // Create view record
@@ -113,14 +114,24 @@ export async function POST(request: NextRequest) {
         });
 
         await viewRecord.save();
+        console.log('View record saved with ID:', viewRecord._id);
 
         // Update article view count if real article
+        let updatedArticle = null;
         if (article) {
-          await News.findByIdAndUpdate(
+          updatedArticle = await News.findByIdAndUpdate(
             (article as any)._id,
-            { $inc: { views: 1 } }
+            { $inc: { views: 1 } },
+            { new: true }
           );
+          console.log('Article view count updated to:', updatedArticle?.views);
         }
+
+        // Get current counts for verification
+        const totalViews = await ArticleView.countDocuments();
+        const articleViews = await ArticleView.countDocuments({
+          articleId: article ? (article as any)._id : viewRecord.articleId
+        });
 
         return NextResponse.json({
           success: true,
@@ -128,9 +139,13 @@ export async function POST(request: NextRequest) {
           data: {
             viewId: viewRecord._id,
             articleSlug: viewRecord.articleSlug,
-            ipAddress: viewRecord.ipAddress,
+            articleTitle: viewRecord.articleTitle,
+            ipAddress: viewRecord.ipAddress.substring(0, 8) + '***',
             location: viewRecord.location,
-            isRealArticle: !!article
+            isRealArticle: !!article,
+            newViewCount: updatedArticle?.views || 0,
+            totalViewsInDB: totalViews,
+            articleViewsInDB: articleViews
           },
           timestamp: new Date().toISOString()
         });
