@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create event data
-    const eventData = {
+    const eventData: any = {
       title,
       description,
       imageUrl,

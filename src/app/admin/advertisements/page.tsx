@@ -41,6 +41,7 @@ export default function AdvertisementsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterZone, setFilterZone] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [totalPages, setTotalPages] = useState(1);
 
   const fetchAdvertisements = useCallback(async () => {
     try {

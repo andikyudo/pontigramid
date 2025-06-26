@@ -29,7 +29,7 @@ const categoryColors: { [key: string]: string } = {
   umum: 'bg-gray-100 text-gray-800'
 };
 
-export default function NewsCard({ news }: NewsCardProps) {
+function NewsCard({ news }: NewsCardProps) {
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
       <Link href={`/berita/${news.slug}`}>

@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create advertisement data
-    const advertisementData = {
+    const advertisementData: any = {
       title,
       description,
       imageUrl,

@@ -28,7 +28,7 @@ const categoryColors: { [key: string]: string } = {
   umum: 'bg-gray-500 text-white'
 };
 
-export default function BreakingNewsSlider() {
+function BreakingNewsSlider() {
   // Use React Query for caching
   const { data: headlines = [], isLoading: loading, isError, error } = useBreakingNews(5);
 

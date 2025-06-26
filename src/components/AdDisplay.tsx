@@ -20,7 +20,7 @@ interface AdDisplayProps {
   className?: string;
 }
 
-export default function AdDisplay({ zone, limit = 1, className = '' }: AdDisplayProps) {
+function AdDisplay({ zone, limit = 1, className = '' }: AdDisplayProps) {
   const [ads, setAds] = useState<Advertisement[]>([]);
   const [loading, setLoading] = useState(true);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
