@@ -67,10 +67,14 @@ const UserSchema = new Schema<IUser>({
   timestamps: true
 });
 
-// Indexes for performance
-UserSchema.index({ username: 1 });
-UserSchema.index({ email: 1 });
-UserSchema.index({ role: 1, isActive: 1 });
+// Indexes for performance - conditional creation
+try {
+  UserSchema.index({ username: 1 }, { unique: true });
+  UserSchema.index({ email: 1 }, { unique: true });
+  UserSchema.index({ role: 1, isActive: 1 });
+} catch (error) {
+  // Indexes already exist, ignore error
+}
 
 // Virtual for checking if account is locked
 UserSchema.virtual('isLocked').get(function() {

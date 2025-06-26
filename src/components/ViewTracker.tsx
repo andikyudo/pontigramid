@@ -90,7 +90,7 @@ export default function ViewTracker({
           headers['x-location-consent'] = 'true';
         }
 
-        const response = await fetch('/api/analytics/track-view', {
+        const response = await fetch('/api/track-view', {
           method: 'POST',
           headers,
           body: JSON.stringify({
@@ -141,7 +141,7 @@ export default function ViewTracker({
       if (viewDuration < 5) return; // Don't update for very short views
 
       try {
-        await fetch('/api/analytics/track-view', {
+        await fetch('/api/track-view', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -32,6 +32,9 @@ export default function NewsDetail() {
 
   const { data: news, isLoading, isError } = useNewsArticle(slug);
 
+  // Debug logging
+  console.log('Article loading state:', { slug, isLoading, isError, news });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">

@@ -115,13 +115,17 @@ const ArticleViewSchema = new mongoose.Schema<IArticleView>({
   collection: 'articleviews'
 });
 
-// Compound indexes for analytics queries
-ArticleViewSchema.index({ articleId: 1, viewedAt: -1 });
-ArticleViewSchema.index({ articleCategory: 1, viewedAt: -1 });
-ArticleViewSchema.index({ 'location.district': 1, viewedAt: -1 });
-ArticleViewSchema.index({ 'location.city': 1, articleCategory: 1 });
-ArticleViewSchema.index({ viewedAt: -1, isUniqueView: 1 });
-ArticleViewSchema.index({ ipAddress: 1, articleId: 1, viewedAt: -1 });
+// Compound indexes for analytics queries - conditional creation
+try {
+  ArticleViewSchema.index({ articleId: 1, viewedAt: -1 });
+  ArticleViewSchema.index({ articleCategory: 1, viewedAt: -1 });
+  ArticleViewSchema.index({ 'location.district': 1, viewedAt: -1 });
+  ArticleViewSchema.index({ 'location.city': 1, articleCategory: 1 });
+  ArticleViewSchema.index({ viewedAt: -1, isUniqueView: 1 });
+  ArticleViewSchema.index({ ipAddress: 1, articleId: 1, viewedAt: -1 });
+} catch (error) {
+  // Indexes already exist, ignore error
+}
 
 // Virtual for formatted date
 ArticleViewSchema.virtual('formattedDate').get(function() {

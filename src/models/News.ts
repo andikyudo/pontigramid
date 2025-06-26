@@ -90,6 +90,7 @@ const NewsSchema = new Schema<INews>({
 
 // Index untuk pencarian
 NewsSchema.index({ title: 'text', content: 'text', excerpt: 'text' });
+NewsSchema.index({ slug: 1 }, { unique: true });
 NewsSchema.index({ category: 1 });
 NewsSchema.index({ published: 1 });
 NewsSchema.index({ isBreakingNews: 1 });

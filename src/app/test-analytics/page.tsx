@@ -52,7 +52,7 @@ export default function TestAnalyticsPage() {
       results.push({
         test: 'Error',
         success: false,
-        data: { error: error.message }
+        data: { error: error instanceof Error ? error.message : 'Unknown error' }
       });
     }
 
