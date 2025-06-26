@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, memo } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { TrendingUp, Calendar, User, Eye } from 'lucide-react';
 import { formatDateShort } from '@/lib/utils';
 import { useInView } from 'react-intersection-observer';
 import { useTrendingNews } from '@/hooks/useNews';
 import { TrendingNewsSkeleton } from '@/components/LoadingSkeleton';
+import OptimizedNewsImage from '@/components/OptimizedNewsImage';
 
 interface NewsItem {
   _id: string;
@@ -103,27 +103,16 @@ function TrendingNews() {
                         </div>
                         <Link href={`/berita/${news.slug}`}>
                           {news.imageUrl && !imageErrors[news.slug] ? (
-                            news.imageUrl.startsWith('data:') ? (
-                              <img
-                                src={news.imageUrl}
-                                alt={news.title}
-                                className="w-full h-full object-cover rounded-l-lg"
-                                onError={() => handleImageError(news.slug)}
-                                loading="lazy"
-                              />
-                            ) : (
-                              <Image
-                                src={news.imageUrl}
-                                alt={news.title}
-                                fill
-                                className="object-cover rounded-l-lg"
-                                sizes="96px"
-                                priority={false}
-                                quality={85}
-                                placeholder="blur"
-                                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+Rw="
-                              />
-                            )
+                            <OptimizedNewsImage
+                              src={news.imageUrl}
+                              alt={news.title}
+                              className="object-cover rounded-l-lg"
+                              sizes="96px"
+                              priority={false}
+                              onError={() => handleImageError(news.slug)}
+                              onLoad={() => handleImageLoad(news.slug)}
+                              fallbackClassName="rounded-l-lg"
+                            />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 rounded-l-lg flex items-center justify-center">
                               <div className="text-gray-400">
@@ -208,40 +197,17 @@ function TrendingNews() {
                   
                   {/* Image */}
                   <Link href={`/berita/${news.slug}`}>
-                    <div className="relative h-48 overflow-hidden bg-gray-100 trending-news-container">
+                    <div className="relative h-48 overflow-hidden bg-gray-100">
                       {news.imageUrl && !imageErrors[news.slug] ? (
-                        news.imageUrl.startsWith('data:') ? (
-                          <img
-                            src={news.imageUrl}
-                            alt={news.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={() => handleImageError(news.slug)}
-                            onLoad={() => handleImageLoad(news.slug)}
-                            loading="lazy"
-                            style={{ display: 'block' }}
-                          />
-                        ) : (
-                          <div className="relative w-full h-full trending-news-image">
-                            <Image
-                              src={news.imageUrl}
-                              alt={news.title}
-                              fill
-                              className="object-cover group-hover:scale-105 transition-transform duration-300"
-                              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 400px"
-                              priority={index < 2}
-                              quality={85}
-                              placeholder="blur"
-                              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+Rw="
-                              onLoad={() => handleImageLoad(news.slug)}
-                              onError={() => handleImageError(news.slug)}
-                              style={{
-                                objectFit: 'cover',
-                                width: '100%',
-                                height: '100%'
-                              }}
-                            />
-                          </div>
-                        )
+                        <OptimizedNewsImage
+                          src={news.imageUrl}
+                          alt={news.title}
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 400px"
+                          priority={index < 2}
+                          onError={() => handleImageError(news.slug)}
+                          onLoad={() => handleImageLoad(news.slug)}
+                        />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                           <div className="text-gray-400 text-center">
@@ -317,29 +283,6 @@ function TrendingNews() {
           </div>
         )}
       </div>
-
-      {/* Desktop-specific CSS fixes */}
-      <style jsx>{`
-        @media (min-width: 640px) {
-          .trending-news-image {
-            position: relative !important;
-            width: 100% !important;
-            height: 100% !important;
-            display: block !important;
-          }
-
-          .trending-news-image img {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important;
-            display: block !important;
-          }
-
-          .trending-news-container {
-            background-color: #f3f4f6 !important;
-          }
-        }
-      `}</style>
     </section>
   );
 }
